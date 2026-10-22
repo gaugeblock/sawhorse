@@ -1,6 +1,6 @@
 # `sawhorse` — Provider-Agnostic 3-Mode LLM Runtime
 
-[![Version](https://img.shields.io/badge/version-0.0.1--alpha.1-blue.svg)](https://gaugeblock.dev)
+[![Version](https://img.shields.io/badge/version-0.1.0--beta.1-blue.svg)](https://gaugeblock.dev)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 [![gaugeblock](https://img.shields.io/badge/suite-gaugeblock-orange.svg)](https://github.com/gaugeblock)
 
