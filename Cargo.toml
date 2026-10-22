@@ -1,11 +1,46 @@
-[package]
-name = "sawhorse"
+[workspace]
+resolver = "3"
+members = [
+    ".",
+    "crates/*",
+]
+
+[workspace.package]
 version = "0.0.1-alpha.1"
 edition = "2024"
-authors = ["Colin Wolff"]
-description = "Provider-agnostic LLM runtime supporting embedded Candle weights, local GGUF, and OpenAI-compatible APIs."
+authors = ["Colin Wolff <1562545+colinwolff@users.noreply.github.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/gaugeblock/sawhorse"
+homepage = "https://gaugeblock.dev"
 readme = "README.md"
 keywords = ["ast", "neurosymbolic", "codegen", "llm", "compiler"]
 categories = ["development-tools", "compilers", "command-line-utilities"]
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[package]
+name = "sawhorse"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Provider-agnostic 3-mode LLM runtime for deterministic neurosymbolic code synthesis."
+
+[dependencies]
+sawhorse-core = { path = "crates/sawhorse-core", version = "0.0.1-alpha.1" }
+
+[features]
+default = ["candle"]
+candle = ["sawhorse-core/candle"]
+
+[lints]
+workspace = true
+

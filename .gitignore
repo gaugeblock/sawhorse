@@ -19,3 +19,8 @@ Thumbs.db
 .env.*
 *.log
 *.rs.bk
+
+# Local runtime models & configs
+sawhorse.toml
+models/
+

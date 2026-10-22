@@ -1,9 +1,32 @@
 [package]
 name = "sawhorse-core"
-version = "0.0.1-alpha.1"
-edition = "2024"
-authors = ["Colin Wolff"]
-description = "Core library and traits for sawhorse:Provider-agnostic LLM runtime supporting embedded Candle weights, local GGUF, and OpenAI-compatible APIs."
-license = "Apache-2.0"
-repository = "https://github.com/gaugeblock/sawhorse"
-readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Core library, contracts, routing, and provider adapters for sawhorse"
+
+[lints]
+workspace = true
+
+[dependencies]
+async-trait = "0.1"
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+tokio = { version = "1.43", features = ["sync", "time", "rt", "macros"] }
+toml = "0.8"
+tracing = "0.1"
+
+# Mode 1: Optional native embedded candle inference
+candle-core = { version = "0.11", optional = true }
+candle-transformers = { version = "0.11", optional = true }
+candle-nn = { version = "0.11", optional = true }
+
+[features]
+default = []
+candle = ["dep:candle-core", "dep:candle-transformers", "dep:candle-nn"]
+

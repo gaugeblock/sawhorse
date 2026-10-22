@@ -1,0 +1,48 @@
+# sawhorse.toml.example — Reference Configuration
+# Copy to sawhorse.toml and customize for your environment
+
+[timeouts]
+inference_timeout_secs = 60
+ping_timeout_secs = 5
+
+[providers.local_llama]
+mode = "local_runtime"
+model_id = "qwen2.5-coder-7b"
+endpoint_or_path = "http://127.0.0.1:8080"
+dialect = "llama_cpp"
+
+[providers.cloud_openai]
+mode = "open_ai_compatible"
+base_url = "https://api.openai.com/v1"
+api_key_env = "OPENAI_API_KEY"
+model_name = "gpt-4o-mini"
+dialect = "standard_open_ai"
+
+[providers.vllm_cluster]
+mode = "open_ai_compatible"
+base_url = "http://cluster.local:8000/v1"
+api_key_env = "VLLM_API_KEY"
+model_name = "qwen2.5-coder-32b-instruct"
+dialect = "vllm"
+
+[providers.candle_embedded]
+mode = "in_house_candle"
+model_id = "gaugeblock-micro-v1"
+weights_path = "./models/micro.safetensors"
+
+[roles.planner]
+provider = "cloud_openai"
+fallback = ["vllm_cluster", "local_llama"]
+
+[roles.system1_router]
+provider = "local_llama"
+fallback = ["cloud_openai"]
+
+[roles.hole_filler]
+provider = "local_llama"
+fallback = ["cloud_openai"]
+
+[roles.oracle]
+provider = "cloud_openai"
+fallback = ["vllm_cluster"]
+
