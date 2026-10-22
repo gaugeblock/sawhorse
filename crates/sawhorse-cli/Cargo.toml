@@ -1,0 +1,13 @@
+[package]
+name = "sawhorse-cli"
+version = "0.0.1-alpha.1"
+edition = "2024"
+authors = ["Colin Wolff"]
+description = "Command-line interface and MCP server for sawhorse:Provider-agnostic LLM runtime supporting embedded Candle weights, local GGUF, and OpenAI-compatible APIs."
+license = "Apache-2.0"
+repository = "https://github.com/gaugeblock/sawhorse"
+readme = "../../README.md"
+
+[[bin]]
+name = "sawhorse"
+path = "src/main.rs"
