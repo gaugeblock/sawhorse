@@ -66,3 +66,4 @@ jobs:
           cargo run --package sawhorse-cli --bin sawhorse -- --config "$test_dir/sawhorse.toml" ping --json
           cargo run --package sawhorse-cli --bin sawhorse -- --help
           rm -rf "$test_dir"
+
