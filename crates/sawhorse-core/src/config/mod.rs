@@ -15,9 +15,20 @@ impl SawhorseConfig {
         let content = std::fs::read_to_string(path).map_err(|err| {
             SawhorseError::Config(format!("Failed to read {}: {err}", path.display()))
         })?;
-        let config: Self = toml::from_str(&content).map_err(|err| {
+        let val: toml::Value = toml::from_str(&content).map_err(|err| {
             SawhorseError::Config(format!("Failed to parse {}: {err}", path.display()))
         })?;
+
+        let config: Self = if let Some(sub) = val.get("sawhorse") {
+            sub.clone().try_into().map_err(|err| {
+                SawhorseError::Config(format!("Failed to parse [sawhorse] in {}: {err}", path.display()))
+            })?
+        } else {
+            val.try_into().map_err(|err| {
+                SawhorseError::Config(format!("Failed to parse {}: {err}", path.display()))
+            })?
+        };
+
         config.validate()?;
         Ok(config)
     }
@@ -25,10 +36,18 @@ impl SawhorseConfig {
     /// Discovers configuration using hierarchical search paths.
     ///
     /// Searches:
-    /// 1. `./sawhorse.toml` in the current working directory.
-    /// 2. `~/.config/sawhorse/sawhorse.toml` (or platform equivalent).
-    /// 3. Falls back to default configuration.
+    /// 1. `.gaugeblock/config.toml` in the current working directory.
+    /// 2. `./sawhorse.toml` in the current working directory.
+    /// 3. `~/.config/sawhorse/sawhorse.toml` (or platform equivalent).
+    /// 4. Falls back to default configuration.
     pub fn discover() -> Result<Self, SawhorseError> {
+        let gb_config = PathBuf::from(".gaugeblock").join("config.toml");
+        if gb_config.is_file()
+            && let Ok(cfg) = Self::load_from_path(&gb_config)
+        {
+            return Ok(cfg);
+        }
+
         let local_path = PathBuf::from("sawhorse.toml");
         if local_path.is_file() {
             return Self::load_from_path(&local_path);
