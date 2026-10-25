@@ -3,7 +3,9 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+pub mod env_loader;
 pub mod schema;
+pub use env_loader::resolve_secret_from_env_file;
 pub use schema::*;
 
 use crate::error::SawhorseError;

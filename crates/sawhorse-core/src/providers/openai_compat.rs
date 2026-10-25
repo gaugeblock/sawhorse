@@ -65,7 +65,17 @@ impl OpenAiCompatProvider {
     }
 
     fn resolve_token(&self) -> Result<String, SawhorseError> {
-        std::env::var(&self.api_key_env).map_err(|_| SawhorseError::MissingSecret {
+        if let Ok(key) = std::env::var(&self.api_key_env)
+            && !key.trim().is_empty()
+        {
+            return Ok(key);
+        }
+
+        if let Some(key) = crate::config::resolve_secret_from_env_file(&self.api_key_env) {
+            return Ok(key);
+        }
+
+        Err(SawhorseError::MissingSecret {
             env_var: self.api_key_env.clone(),
             provider: self.name.clone(),
         })
