@@ -139,9 +139,19 @@ impl ModelProvider for OpenAiCompatProvider {
             message: format!("Malformed JSON: {e}"),
         })?;
 
-        let text = body["choices"][0]["message"]["content"].as_str().unwrap_or_default().to_string();
-        let prompt_tokens = body["usage"]["prompt_tokens"].as_u64().unwrap_or(0) as u32;
-        let completion_tokens = body["usage"]["completion_tokens"].as_u64().unwrap_or(0) as u32;
+        let text = body["choices"][0]["message"]["content"]
+            .as_str()
+            .or_else(|| body["data"]["choices"][0]["message"]["content"].as_str())
+            .unwrap_or_default()
+            .to_string();
+        let prompt_tokens = body["usage"]["prompt_tokens"]
+            .as_u64()
+            .or_else(|| body["data"]["usage"]["prompt_tokens"].as_u64())
+            .unwrap_or(0) as u32;
+        let completion_tokens = body["usage"]["completion_tokens"]
+            .as_u64()
+            .or_else(|| body["data"]["usage"]["completion_tokens"].as_u64())
+            .unwrap_or(0) as u32;
 
         Ok(InferenceResponse {
             text,
@@ -176,9 +186,13 @@ impl ModelProvider for OpenAiCompatProvider {
                 if let Some(data) = line.trim().strip_prefix("data: ")
                     && data != "[DONE]"
                     && let Ok(v) = serde_json::from_str::<Value>(data)
-                    && let Some(delta) = v["choices"][0]["delta"]["content"].as_str()
                 {
-                    extracted.push_str(delta);
+                    let delta = v["choices"][0]["delta"]["content"]
+                        .as_str()
+                        .or_else(|| v["data"]["choices"][0]["delta"]["content"].as_str());
+                    if let Some(d) = delta {
+                        extracted.push_str(d);
+                    }
                 }
             }
             Ok(extracted)
