@@ -1,10 +1,13 @@
 # `sawhorse` — Provider-Agnostic 3-Mode LLM Runtime
 
-[![Version](https://img.shields.io/badge/version-0.1.0--beta.1-blue.svg)](https://gaugeblock.dev)
-[![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1.0--beta.4-blue.svg)](https://gaugeblock.dev)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![gaugeblock](https://img.shields.io/badge/suite-gaugeblock-orange.svg)](https://github.com/gaugeblock)
+[![Documentation](https://img.shields.io/badge/docs-9--doc%20topology-green.svg)](ARCHITECTURE.md)
 
-`sawhorse` is the high-performance, multi-mode LLM inference engine for the **[`gaugeblock`](https://gaugeblock.dev)** neurosymbolic suite. It decouples high-level spec planners ([`chalkline`](https://github.com/gaugeblock/chalkline)) and synthesis orchestrators ([`joiner`](https://github.com/gaugeblock/joiner)) from specific LLM providers.
+Part of the **[`gaugeblock`](https://gaugeblock.dev)** neurosymbolic code synthesis ecosystem.
+
+> In fine carpentry, a **sawhorse** is the rugged, reliable trestle that supports workpieces firmly at bench height while cuts and joinery take shape. In the `gaugeblock` suite, `sawhorse` provides the sturdy foundational runtime for neural generation: it decouples high-level spec planners ([`chalkline`](https://github.com/gaugeblock/chalkline)) and synthesis orchestrators ([`joiner`](https://github.com/gaugeblock/joiner)) from specific LLM providers, offering unified grammar-constrained decoding across embedded, local, and remote models.
 
 ---
 
@@ -101,6 +104,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+---
+
+## 5. Workspace Crate Layout
+
+* **`sawhorse`**: Facade crate re-exporting `sawhorse-core`.
+* **`crates/sawhorse-core`**: Core runtime traits, provider clients (OpenAI-compatible, Candle, LocalRuntime), grammar adapters, reasoning suppression, and role routing.
+* **`crates/sawhorse-cli`**: Clap binary (`sawhorse`) for provider ping, benchmarking, role completion, and interactive testing.
+
+---
+
+## 6. Repository Documentation
+
+`sawhorse` adheres strictly to the canonical **9-Document Architecture**:
+* **[`CONTRIBUTING.md`](./CONTRIBUTING.md):** Local toolchain prerequisites, credentials setup (`.gaugeblock/.env`), and test execution.
+* **[`ARCHITECTURE.md`](./ARCHITECTURE.md):** Subsystem execution modes, provider abstractions, and SSE streaming pipeline.
+* **[`SPEC.md`](./SPEC.md):** Request/Response wire contracts, reasoning effort schemas, and error types.
+* **[`AGENTS.md`](./AGENTS.md):** Autonomous systems directives, <=250 LOC constraints, and zero-unwrap rules.
+* **[`CHANGELOG.md`](./CHANGELOG.md):** Historical release entries and unreleased changes.
+
+---
+
+## 7. Verification & Development Directives
+
+* **File Size Ceiling:** All `.rs` source files must strictly obey the <= 250 LOC limit.
+* **Tiered Verification Matrix:**
+  * Tier 1: `cargo check -p sawhorse-core` (<2s).
+  * Tier 2: `cargo fmt --check -p sawhorse-core && cargo clippy -p sawhorse-core && cargo test -p sawhorse-core`.
+  * Tier 3: `chalkline docs check -d .` before task completion.
 
 ---
 
