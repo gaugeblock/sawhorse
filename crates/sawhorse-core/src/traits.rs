@@ -22,10 +22,7 @@ pub trait ModelProvider: Send + Sync + std::fmt::Debug {
     async fn complete(&self, req: &InferenceRequest) -> Result<InferenceResponse, SawhorseError>;
 
     /// Executes a streaming inference request yielding incremental token chunks.
-    async fn complete_stream(
-        &self,
-        req: &InferenceRequest,
-    ) -> Result<TokenStream, SawhorseError>;
+    async fn complete_stream(&self, req: &InferenceRequest) -> Result<TokenStream, SawhorseError>;
 
     /// Performs a health check ping to ensure the provider backend is responsive.
     async fn health_check(&self) -> Result<bool, SawhorseError>;
@@ -36,4 +33,3 @@ pub trait ModelProvider: Send + Sync + std::fmt::Debug {
     /// Returns the execution mode and metadata for this provider.
     fn execution_mode(&self) -> &ExecutionMode;
 }
-

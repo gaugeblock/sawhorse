@@ -29,10 +29,26 @@ pub fn build_payload(
 
     if let Some(effort) = req.reasoning_effort {
         match effort {
-            ReasoningEffort::None => body["reasoning_effort"] = json!("none"),
-            ReasoningEffort::Low => body["reasoning_effort"] = json!("low"),
-            ReasoningEffort::Medium => body["reasoning_effort"] = json!("medium"),
-            ReasoningEffort::High => body["reasoning_effort"] = json!("high"),
+            ReasoningEffort::None => {
+                body["reasoning_effort"] = json!("none");
+                body["thinking"] = json!({ "type": "disabled" });
+                body["reasoning"] = json!({ "effort": "none" });
+            }
+            ReasoningEffort::Low => {
+                body["reasoning_effort"] = json!("low");
+                body["thinking"] = json!({ "type": "enabled" });
+                body["reasoning"] = json!({ "effort": "low" });
+            }
+            ReasoningEffort::Medium => {
+                body["reasoning_effort"] = json!("medium");
+                body["thinking"] = json!({ "type": "enabled" });
+                body["reasoning"] = json!({ "effort": "medium" });
+            }
+            ReasoningEffort::High => {
+                body["reasoning_effort"] = json!("high");
+                body["thinking"] = json!({ "type": "enabled" });
+                body["reasoning"] = json!({ "effort": "high" });
+            }
         }
     }
 

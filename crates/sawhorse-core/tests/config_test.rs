@@ -45,4 +45,3 @@ fn test_toml_roundtrip() {
     let parsed: SawhorseConfig = toml::from_str(&toml_str).unwrap();
     assert_eq!(cfg, parsed);
 }
-

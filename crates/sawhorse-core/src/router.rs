@@ -47,7 +47,10 @@ impl RoleRouter {
     }
 
     /// Resolves the primary provider assigned to a given `ModelRole`.
-    pub fn provider_for_role(&self, role: ModelRole) -> Result<Arc<dyn ModelProvider>, SawhorseError> {
+    pub fn provider_for_role(
+        &self,
+        role: ModelRole,
+    ) -> Result<Arc<dyn ModelProvider>, SawhorseError> {
         let role_cfg = self
             .roles
             .get(&role)
@@ -61,7 +64,10 @@ impl RoleRouter {
     }
 
     /// Dispatches an inference request through the role's primary provider and fallback chain.
-    pub async fn complete(&self, req: &InferenceRequest) -> Result<InferenceResponse, SawhorseError> {
+    pub async fn complete(
+        &self,
+        req: &InferenceRequest,
+    ) -> Result<InferenceResponse, SawhorseError> {
         let role_cfg = self
             .roles
             .get(&req.role)

@@ -91,4 +91,3 @@ pub struct SawhorseConfig {
     #[serde(default)]
     pub timeouts: TimeoutConfig,
 }
-

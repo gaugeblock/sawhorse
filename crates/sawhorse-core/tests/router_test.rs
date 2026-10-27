@@ -45,4 +45,3 @@ async fn test_router_fallback_exhaustion_on_unreachable() {
     let err_str = res.unwrap_err().to_string();
     assert!(err_str.contains("All providers in fallback chain failed"));
 }
-

@@ -23,7 +23,10 @@ impl SawhorseConfig {
 
         let config: Self = if let Some(sub) = val.get("sawhorse") {
             sub.clone().try_into().map_err(|err| {
-                SawhorseError::Config(format!("Failed to parse [sawhorse] in {}: {err}", path.display()))
+                SawhorseError::Config(format!(
+                    "Failed to parse [sawhorse] in {}: {err}",
+                    path.display()
+                ))
             })?
         } else {
             val.try_into().map_err(|err| {
@@ -147,4 +150,3 @@ impl Default for SawhorseConfig {
         }
     }
 }
-
