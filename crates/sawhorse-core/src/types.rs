@@ -59,6 +59,20 @@ pub enum ModelRole {
     Oracle,
 }
 
+/// Level of reasoning or thinking effort requested from the model.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReasoningEffort {
+    /// Disable reasoning trace / thinking phase for fast direct output.
+    None,
+    /// Minimal reasoning effort.
+    Low,
+    /// Standard reasoning effort.
+    Medium,
+    /// Exhaustive reasoning effort.
+    High,
+}
+
 /// Unary inference request passed into `ModelProvider`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InferenceRequest {
@@ -76,6 +90,8 @@ pub struct InferenceRequest {
     pub max_tokens: u16,
     /// Sampling temperature (0.0 for deterministic output).
     pub temperature: f32,
+    /// Optional reasoning effort level.
+    pub reasoning_effort: Option<ReasoningEffort>,
 }
 
 impl InferenceRequest {
@@ -89,7 +105,14 @@ impl InferenceRequest {
             grammar_format: None,
             max_tokens: 1024,
             temperature: 0.0,
+            reasoning_effort: None,
         }
+    }
+
+    /// Sets the reasoning effort level.
+    pub fn with_reasoning_effort(mut self, effort: ReasoningEffort) -> Self {
+        self.reasoning_effort = Some(effort);
+        self
     }
 
     /// Attaches a GBNF grammar constraint to this request.
@@ -126,5 +149,8 @@ pub struct InferenceResponse {
     pub latency_ms: u64,
     /// Identifier or model name that served the response.
     pub model_used: String,
+    /// Optional chain-of-thought or reasoning trace emitted by the model.
+    pub reasoning_trace: Option<String>,
+    /// Number of tokens consumed by the reasoning trace.
+    pub reasoning_tokens: Option<u32>,
 }
-

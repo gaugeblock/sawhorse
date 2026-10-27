@@ -6,7 +6,7 @@ use std::time::Instant;
 
 use async_trait::async_trait;
 use futures_util::stream;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tracing::{debug, warn};
 
 use crate::error::SawhorseError;
@@ -59,7 +59,10 @@ impl LocalGgufProvider {
         })
     }
 
-    async fn complete_http(&self, req: &InferenceRequest) -> Result<InferenceResponse, SawhorseError> {
+    async fn complete_http(
+        &self,
+        req: &InferenceRequest,
+    ) -> Result<InferenceResponse, SawhorseError> {
         let url = format!("{}/completion", self.endpoint_or_path.trim_end_matches('/'));
         let mut body = json!({
             "prompt": &req.prompt,
@@ -112,10 +115,15 @@ impl LocalGgufProvider {
             completion_tokens,
             latency_ms: start.elapsed().as_millis() as u64,
             model_used: self.model_id.clone(),
+            reasoning_trace: None,
+            reasoning_tokens: None,
         })
     }
 
-    fn complete_subprocess(&self, req: &InferenceRequest) -> Result<InferenceResponse, SawhorseError> {
+    fn complete_subprocess(
+        &self,
+        req: &InferenceRequest,
+    ) -> Result<InferenceResponse, SawhorseError> {
         let binary = Path::new(&self.endpoint_or_path);
         let start = Instant::now();
 
@@ -153,6 +161,8 @@ impl LocalGgufProvider {
             completion_tokens: 0,
             latency_ms: start.elapsed().as_millis() as u64,
             model_used: self.model_id.clone(),
+            reasoning_trace: None,
+            reasoning_tokens: None,
         })
     }
 }
@@ -167,10 +177,7 @@ impl ModelProvider for LocalGgufProvider {
         }
     }
 
-    async fn complete_stream(
-        &self,
-        req: &InferenceRequest,
-    ) -> Result<TokenStream, SawhorseError> {
+    async fn complete_stream(&self, req: &InferenceRequest) -> Result<TokenStream, SawhorseError> {
         let res = self.complete(req).await?;
         let s = stream::once(async move { Ok(res.text) });
         Ok(Box::pin(s))
@@ -204,4 +211,3 @@ impl ModelProvider for LocalGgufProvider {
         &self.mode
     }
 }
-

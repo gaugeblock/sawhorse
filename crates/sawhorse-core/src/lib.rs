@@ -13,8 +13,11 @@ pub mod types;
 
 pub use config::{OpenAiDialect, ProviderConfig, RoleConfig, SawhorseConfig, TimeoutConfig};
 pub use error::SawhorseError;
-pub use providers::{create_provider, CandleNativeProvider, LocalGgufProvider, OpenAiCompatProvider};
+pub use providers::{
+    CandleNativeProvider, LocalGgufProvider, OpenAiCompatProvider, create_provider,
+};
 pub use router::RoleRouter;
 pub use traits::{ModelProvider, TokenStream};
-pub use types::{ExecutionMode, GrammarFormat, InferenceRequest, InferenceResponse, ModelRole};
-
+pub use types::{
+    ExecutionMode, GrammarFormat, InferenceRequest, InferenceResponse, ModelRole, ReasoningEffort,
+};

@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 
 use crate::config::schema::OpenAiDialect;
 use crate::error::SawhorseError;
-use crate::types::{GrammarFormat, InferenceRequest};
+use crate::types::{GrammarFormat, InferenceRequest, ReasoningEffort};
 
 /// Constructs an OpenAI chat completion JSON payload from an `InferenceRequest`.
 pub fn build_payload(
@@ -27,6 +27,15 @@ pub fn build_payload(
         "stream": stream,
     });
 
+    if let Some(effort) = req.reasoning_effort {
+        match effort {
+            ReasoningEffort::None => body["reasoning_effort"] = json!("none"),
+            ReasoningEffort::Low => body["reasoning_effort"] = json!("low"),
+            ReasoningEffort::Medium => body["reasoning_effort"] = json!("medium"),
+            ReasoningEffort::High => body["reasoning_effort"] = json!("high"),
+        }
+    }
+
     if let Some(ref grammar) = req.grammar_constraint {
         match (dialect, req.grammar_format) {
             (OpenAiDialect::Vllm, Some(GrammarFormat::Regex)) => {
@@ -42,21 +51,41 @@ pub fn build_payload(
     body
 }
 
-/// Extracts text content and token usage counts from a chat completion response body.
-pub fn extract_chat_response(body: &Value) -> (String, u32, u32) {
+/// Extracts text content, usage, and reasoning metadata from a chat completion response body.
+pub fn extract_chat_response(body: &Value) -> (String, u32, u32, Option<String>, Option<u32>) {
     let d = &body["data"];
     let text = body["choices"][0]["message"]["content"]
         .as_str()
         .or_else(|| d["choices"][0]["message"]["content"].as_str())
         .unwrap_or_default()
         .to_string();
+
+    let reasoning_trace = body["choices"][0]["message"]["reasoning"]
+        .as_str()
+        .or_else(|| d["choices"][0]["message"]["reasoning"].as_str())
+        .or_else(|| body["choices"][0]["message"]["reasoning_content"].as_str())
+        .or_else(|| d["choices"][0]["message"]["reasoning_content"].as_str())
+        .map(|s| s.to_string());
+
     let get_u32 = |k: &str| {
         body["usage"][k]
             .as_u64()
             .or_else(|| d["usage"][k].as_u64())
             .unwrap_or(0) as u32
     };
-    (text, get_u32("prompt_tokens"), get_u32("completion_tokens"))
+
+    let reasoning_tokens = body["usage"]["completion_tokens_details"]["reasoning_tokens"]
+        .as_u64()
+        .or_else(|| d["usage"]["completion_tokens_details"]["reasoning_tokens"].as_u64())
+        .map(|n| n as u32);
+
+    (
+        text,
+        get_u32("prompt_tokens"),
+        get_u32("completion_tokens"),
+        reasoning_trace,
+        reasoning_tokens,
+    )
 }
 
 /// Enriches HTTP error responses with model identity and diagnostic guidance.

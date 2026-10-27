@@ -50,13 +50,16 @@ impl ModelProvider for OpenAiCompatProvider {
             message: format!("Malformed JSON: {e}"),
         })?;
 
-        let (text, prompt_tokens, completion_tokens) = extract_chat_response(&body);
+        let (text, prompt_tokens, completion_tokens, reasoning_trace, reasoning_tokens) =
+            extract_chat_response(&body);
         Ok(InferenceResponse {
             text,
             prompt_tokens,
             completion_tokens,
             latency_ms: start.elapsed().as_millis() as u64,
             model_used: self.model_name.clone(),
+            reasoning_trace,
+            reasoning_tokens,
         })
     }
 

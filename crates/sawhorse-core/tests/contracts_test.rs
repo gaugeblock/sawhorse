@@ -67,10 +67,11 @@ fn test_inference_request_and_response_serde() {
         completion_tokens: 3,
         latency_ms: 42,
         model_used: "gaugeblock-micro-1".to_string(),
+        reasoning_trace: Some("analyzing user syntax".to_string()),
+        reasoning_tokens: Some(10),
     };
 
     let resp_json = serde_json::to_string(&resp).unwrap();
     let resp_deserialized: InferenceResponse = serde_json::from_str(&resp_json).unwrap();
     assert_eq!(resp, resp_deserialized);
 }
-

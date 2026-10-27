@@ -73,13 +73,19 @@ impl ModelProvider for CandleNativeProvider {
                 )));
             }
 
-            let simulated_fill = format!("// [candle-native:{}] hole fill for: {}", self.model_id, req.prompt.trim());
+            let simulated_fill = format!(
+                "// [candle-native:{}] hole fill for: {}",
+                self.model_id,
+                req.prompt.trim()
+            );
             Ok(InferenceResponse {
                 text: simulated_fill,
                 prompt_tokens: 12,
                 completion_tokens: 18,
                 latency_ms: start.elapsed().as_millis() as u64,
                 model_used: self.model_id.clone(),
+                reasoning_trace: None,
+                reasoning_tokens: None,
             })
         }
 
@@ -93,10 +99,7 @@ impl ModelProvider for CandleNativeProvider {
         }
     }
 
-    async fn complete_stream(
-        &self,
-        req: &InferenceRequest,
-    ) -> Result<TokenStream, SawhorseError> {
+    async fn complete_stream(&self, req: &InferenceRequest) -> Result<TokenStream, SawhorseError> {
         let res = self.complete(req).await?;
         let s = stream::once(async move { Ok(res.text) });
         Ok(Box::pin(s))
@@ -121,4 +124,3 @@ impl ModelProvider for CandleNativeProvider {
         &self.mode
     }
 }
-
