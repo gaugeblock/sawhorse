@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [v0.1.0-beta.4] - YYYY-MM-DD
+
+### Added
+- Initialized local backlog store with `SH` prefix for scoped task tracking (`sawhorse-backlog`).
+
+### Fixed
+- No fixes in this release.
+
+### Changed
+- Modularized `OpenAiCompatProvider` with structured request logging and reasoning diagnostic hints (`sawhorse-providers`) [GB-80].
+- Migrated scoped tasks and design plans to the updated backlog model (`sawhorse-core`).
+
+### Maintenance
+- Updated release history with alpha and beta milestones (`sawhorse`).
+
 ## [v0.1.0-beta.3] - 2026-10-26
 
 ### Fixed
