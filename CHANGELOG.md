@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.0-beta.5] - 2026-05-09
+
+### Added
+- `sawhorse`: Added `reasoning_effort` controls. [GB-81]
+- `sawhorse`: Added DeepSeek and Cline thinking-suppression payload support. [GB-84]
+
+### Fixed
+- No fixes in this release.
+
+### Changed
+- `sawhorse`: `InferenceResponse` now captures reasoning traces. [GB-81]
+
+### Maintenance
+- Standardized README and established the 9-doc architecture for the `sawhorse` workspace.
+
 ### Documentation
 - Standardize README to 9-section template and establish AST-grounded 9-document architecture
 
