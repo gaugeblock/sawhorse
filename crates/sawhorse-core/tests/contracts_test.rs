@@ -1,4 +1,5 @@
 //! Verification tests for Section 5 of `CONTRACTS.md`.
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use sawhorse_core::types::*;
 

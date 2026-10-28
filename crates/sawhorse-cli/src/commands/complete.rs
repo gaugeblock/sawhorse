@@ -3,7 +3,7 @@
 use std::io::Write;
 use std::path::Path;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use futures_util::StreamExt;
 use tracing::info;
 
@@ -90,4 +90,3 @@ pub async fn run_complete(config: SawhorseConfig, mut args: CompleteArgs) -> Res
     info!(model = %resp.model_used, latency = %resp.latency_ms, "Completion finished");
     Ok(())
 }
-

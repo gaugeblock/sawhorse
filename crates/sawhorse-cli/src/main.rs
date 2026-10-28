@@ -14,7 +14,11 @@ use sawhorse_core::config::SawhorseConfig;
 use sawhorse_core::types::{GrammarFormat, ModelRole};
 
 #[derive(Parser, Debug)]
-#[command(name = "sawhorse", version, about = "Provider-agnostic 3-mode LLM runtime")]
+#[command(
+    name = "sawhorse",
+    version,
+    about = "Provider-agnostic 3-mode LLM runtime"
+)]
 struct Cli {
     /// Path to sawhorse.toml configuration file
     #[arg(short, long, global = true)]
@@ -179,4 +183,3 @@ async fn main() -> Result<()> {
         Commands::Bench { prompt, json } => run_bench(config, prompt, json).await,
     }
 }
-

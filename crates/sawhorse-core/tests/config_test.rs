@@ -1,4 +1,5 @@
 //! Tests for configuration loading and validation.
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use sawhorse_core::config::*;
 use sawhorse_core::types::ModelRole;

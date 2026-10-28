@@ -1,7 +1,7 @@
 //! Scaffolds a starter `sawhorse.toml` template.
 
+use anyhow::{Context, Result, bail};
 use std::path::Path;
-use anyhow::{bail, Context, Result};
 
 const STARTER_TOML: &str = r#"# sawhorse.toml — Provider-Agnostic 3-Mode LLM Runtime Configuration
 # Reference: https://github.com/gaugeblock/sawhorse
@@ -70,7 +70,9 @@ pub fn run_init(path: &Path, force: bool) -> Result<()> {
     std::fs::write(&target, STARTER_TOML)
         .with_context(|| format!("Failed to write configuration to '{}'", target.display()))?;
 
-    eprintln!("Initialized starter sawhorse configuration at '{}'", target.display());
+    eprintln!(
+        "Initialized starter sawhorse configuration at '{}'",
+        target.display()
+    );
     Ok(())
 }
-

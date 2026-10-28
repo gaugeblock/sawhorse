@@ -23,13 +23,16 @@ pub async fn run_bench(
     let req = InferenceRequest::new(ModelRole::HoleFiller, &bench_prompt);
 
     if !as_json {
-        println!("{:<20} {:<12} {:<15} {:<10}", "PROVIDER", "LATENCY", "TOKENS (OUT)", "STATUS");
+        println!(
+            "{:<20} {:<12} {:<15} {:<10}",
+            "PROVIDER", "LATENCY", "TOKENS (OUT)", "STATUS"
+        );
         println!("{}", "-".repeat(60));
     }
 
     let mut json_results = Vec::new();
 
-    for (name, _) in &config.providers {
+    for name in config.providers.keys() {
         if let Some(provider) = router.get_provider(name) {
             match provider.complete(&req).await {
                 Ok(resp) => {
@@ -86,4 +89,3 @@ pub async fn run_bench(
     info!("Benchmark completed");
     Ok(())
 }
-

@@ -1,4 +1,5 @@
 //! End-to-end integration tests for `sawhorse` CLI commands.
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use std::process::Command;
 
@@ -57,4 +58,3 @@ fn test_cli_init_in_tempdir() {
 
     let _ = std::fs::remove_dir_all(&temp_dir);
 }
-

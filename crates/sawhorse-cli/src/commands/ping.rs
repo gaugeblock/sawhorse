@@ -19,23 +19,17 @@ pub async fn run_ping(
     if as_json {
         let mut map = serde_json::Map::new();
         for (name, res) in ping_results {
-            if let Some(ref target) = provider {
-                if target != &name {
-                    continue;
-                }
+            if let Some(ref target) = provider
+                && target != &name
+            {
+                continue;
             }
             match res {
                 Ok(latency_ms) => {
-                    map.insert(
-                        name,
-                        json!({ "status": "ok", "latency_ms": latency_ms }),
-                    );
+                    map.insert(name, json!({ "status": "ok", "latency_ms": latency_ms }));
                 }
                 Err(err) => {
-                    map.insert(
-                        name,
-                        json!({ "status": "error", "error": err.to_string() }),
-                    );
+                    map.insert(name, json!({ "status": "error", "error": err.to_string() }));
                 }
             }
         }
@@ -47,10 +41,10 @@ pub async fn run_ping(
     println!("{}", "-".repeat(45));
 
     for (name, res) in ping_results {
-        if let Some(ref target) = provider {
-            if target != &name {
-                continue;
-            }
+        if let Some(ref target) = provider
+            && target != &name
+        {
+            continue;
         }
         match res {
             Ok(latency) => {
@@ -65,4 +59,3 @@ pub async fn run_ping(
     info!("Ping diagnostics completed");
     Ok(())
 }
-

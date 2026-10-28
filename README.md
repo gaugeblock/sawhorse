@@ -11,6 +11,19 @@ Part of the **[`gaugeblock`](https://gaugeblock.dev)** neurosymbolic code synthe
 
 ---
 
+## Why `sawhorse`?
+
+Most AI coding harnesses tightly couple their synthesis logic to proprietary cloud APIs, creating vendor lock-in, latency bottlenecks, and broken grammar constraints.
+
+| Without `sawhorse` | With `sawhorse` |
+|---|---|
+| **Vendor SDK Lock-in:** Code generation hardcodes OpenAI or Anthropic SDKs, requiring complete architectural rewrites to run on local hardware or private clouds. | **Unified `ModelProvider` Trait:** Single provider-agnostic trait abstracting Mode 1 (Candle embedded), Mode 2 (local GGUF), and Mode 3 (OpenAI-compatible) seamlessly. |
+| **Grammar Dialect Mismatches:** Sending GBNF or Lark grammar masks to different servers fails because vLLM, llama.cpp, and outlines use incompatible JSON parameters. | **Automatic Dialect Translation:** Automatically translates grammar requests into server-specific fields (`guided_grammar`, `grammar`, `extra_body`) based on provider config. |
+| **Fragile Single-Point Failures:** Cloud API rate limits, network outages, or token exhaustion kill long-running agent workflows mid-flight. | **Resilient Role Routing & Fallback:** Semantic role routing (`Planner`, `HoleFiller`, `Oracle`) with automatic cascading fallback to secondary local or cloud providers. |
+| **High IPC Overhead for Small Holes:** Sending 5-token hole completions over HTTP adds 100–300ms of round-trip network latency per hole. | **In-Process Candle Execution:** Direct in-process execution using embedded `candle` micro-models (100M–1B params) filling holes in `<15ms` with zero network overhead. |
+
+---
+
 ## 1. The 3 Execution Modes
 
 ```text
@@ -31,24 +44,16 @@ Part of the **[`gaugeblock`](https://gaugeblock.dev)** neurosymbolic code synthe
 
 ---
 
-## 2. Quick Start CLI
+## 2. CLI Commands Reference
 
-```bash
-# Initialize a starter configuration
-sawhorse init
+`sawhorse` provides diagnostic and testing commands for evaluating model backends, measuring latency, and validating grammar constraints. Pass `--json` to any command for structured output.
 
-# Check health and measure latency across all configured providers
-sawhorse ping
-
-# Test prompt completion through a semantic role
-sawhorse complete "let active_user = ?;" --role hole-filler
-
-# Constrain completion with a GBNF grammar
-sawhorse complete "let status = " --grammar "root ::= \"Active\" | \"Inactive\""
-
-# Benchmark latency and throughput across providers
-sawhorse bench
-```
+| Command | Description |
+|---|---|
+| `init` | Scaffold a starter `sawhorse.toml` or `.gaugeblock/config.toml` configuration. |
+| `ping` | Ping configured providers and report round-trip network and generation latency. |
+| `complete` | Execute prompt completion across configured semantic roles with optional grammar masks. |
+| `bench` | Run comparative latency and token throughput benchmarks across all active providers. |
 
 ---
 
@@ -98,46 +103,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let req = InferenceRequest::new(ModelRole::HoleFiller, "let id = ?;");
     let resp = router.complete(&req).await?;
-
-    println!("Generated text: {}", resp.text);
-    println!("Model used: {} (latency: {}ms)", resp.model_used, resp.latency_ms);
+    println!("Completion: {}", resp.content);
     Ok(())
 }
 ```
 
 ---
 
-## 5. Workspace Crate Layout
+## 5. Canonical 9-Document Architecture
 
-* **`sawhorse`**: Facade crate re-exporting `sawhorse-core`.
-* **`crates/sawhorse-core`**: Core runtime traits, provider clients (OpenAI-compatible, Candle, LocalRuntime), grammar adapters, reasoning suppression, and role routing.
-* **`crates/sawhorse-cli`**: Clap binary (`sawhorse`) for provider ping, benchmarking, role completion, and interactive testing.
-
----
-
-## 6. Repository Documentation
-
-`sawhorse` adheres strictly to the canonical **9-Document Architecture**:
-* **[`CONTRIBUTING.md`](./CONTRIBUTING.md):** Local toolchain prerequisites, credentials setup (`.gaugeblock/.env`), and test execution.
-* **[`ARCHITECTURE.md`](./ARCHITECTURE.md):** Subsystem execution modes, provider abstractions, and SSE streaming pipeline.
-* **[`SPEC.md`](./SPEC.md):** Request/Response wire contracts, reasoning effort schemas, and error types.
-* **[`AGENTS.md`](./AGENTS.md):** Autonomous systems directives, <=250 LOC constraints, and zero-unwrap rules.
-* **[`CHANGELOG.md`](./CHANGELOG.md):** Historical release entries and unreleased changes.
+`sawhorse` adheres strictly to the canonical 9-Document Architecture:
+* **[`README.md`](./README.md):** Public elevator pitch, CLI reference, and 3-mode overview.
+* **[`CONTRIBUTING.md`](./CONTRIBUTING.md):** Developer environment setup, Rust 2024 toolchain, and test execution.
+* **[`PRODUCT.md`](./PRODUCT.md):** User personas, JTBD, runtime flexibility metrics, and problem statements.
+* **[`ARCHITECTURE.md`](./ARCHITECTURE.md):** Subsystem topologies, provider adapter pipelines, and crate boundaries.
+* **[`SPEC.md`](./SPEC.md):** Formal inference invariants, fallback state machines, and type contracts.
+* **[`DESIGN.md`](./DESIGN.md):** Architectural Decision Records (ADRs) and trade-off rationales.
+* **[`ROADMAP.md`](./ROADMAP.md):** Strategic milestones, active beta capabilities, and horizons.
+* **[`CHANGELOG.md`](./CHANGELOG.md):** Chronological historical release logs and unreleased entries.
+* **[`AGENTS.md`](./AGENTS.md):** Non-negotiable engineering directives, 250-line file ceiling, and verification matrix.
 
 ---
 
-## 7. Verification & Development Directives
+## 6. License
 
-* **File Size Ceiling:** All `.rs` source files must strictly obey the <= 250 LOC limit.
-* **Tiered Verification Matrix:**
-  * Tier 1: `cargo check -p sawhorse-core` (<2s).
-  * Tier 2: `cargo fmt --check -p sawhorse-core && cargo clippy -p sawhorse-core && cargo test -p sawhorse-core`.
-  * Tier 3: `chalkline docs check -d .` before task completion.
-
----
-
-## License
-
-Licensed under the Apache License, Version 2.0.
-Part of the [`gaugeblock`](https://gaugeblock.dev) suite.
-
+Licensed under the [Apache License, Version 2.0](LICENSE).
