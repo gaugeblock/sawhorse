@@ -11,6 +11,8 @@ description = "Core library, contracts, routing, and provider adapters for sawho
 workspace = true
 
 [dependencies]
+# Shared wire contracts; resolved locally through the meta-harness [patch.crates-io] mapping.
+gaugeblock-contracts = "0.1.0-beta.1"
 async-trait = "0.1"
 futures-util = "0.3"
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
