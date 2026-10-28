@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.0-beta.6] - 2026-05-09
+
+### Maintenance
+
+- Elevated the 9-document architecture to gold standard in the `sawhorse` workspace [GB-115].
+
 ## [v0.1.0-beta.5] - 2026-05-09
 
 ### Added
