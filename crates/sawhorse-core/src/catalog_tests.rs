@@ -125,3 +125,89 @@ fn test_the_bundled_snapshot_resolves_catalog_models() {
         "384k output saturates to the u16 wire maximum rather than wrapping"
     );
 }
+
+#[test]
+fn test_a_source_without_a_gateway_rule_falls_back_to_the_declared_arithmetic() {
+    // The stub cannot compute a gateway budget, so the composition must use GB-215's formula:
+    // min(output cap, window - prompt - 64), floored at 256.
+    let source = Stub(Some(declared(Some(10_000), Some(32_768), None)));
+    let budget = super::output_budget(
+        &ModelLimits::default(),
+        "universal",
+        "m",
+        9_000,
+        None,
+        &source,
+    );
+    assert_eq!(budget, Some(936), "window minus prompt minus headroom");
+}
+
+#[test]
+fn test_nothing_known_means_no_budget_rather_than_a_guess() {
+    let budget = super::output_budget(
+        &ModelLimits::default(),
+        "universal",
+        "m",
+        1_000,
+        None,
+        &NullSource,
+    );
+    assert_eq!(budget, None);
+}
+
+#[cfg(feature = "catalog")]
+#[test]
+fn test_the_catalog_owns_the_budget_when_it_can_compute_one() {
+    use super::{BundledSource, CatalogSource};
+
+    let source = BundledSource::load().expect("bundled snapshot");
+    let window = 1_048_576u32;
+
+    // A small prompt leaves the 32,000-token gateway cap as the binding constraint.
+    let small = source
+        .gateway_output_budget(
+            "universal",
+            "cline-pass/deepseek-v4.1-flash-1017",
+            1_000,
+            None,
+        )
+        .expect("a known model answers");
+    assert_eq!(
+        small, 32_000,
+        "the gateway cap wins over a 384k model limit"
+    );
+
+    // An explicit request above the cap is honoured, still bounded by the model.
+    let asked = source
+        .gateway_output_budget(
+            "universal",
+            "cline-pass/deepseek-v4.1-flash-1017",
+            1_000,
+            Some(50_000),
+        )
+        .expect("a known model answers");
+    assert_eq!(asked, 50_000, "an explicit request raises the cap");
+
+    // Near the window, the remaining context wins over every cap.
+    let tight = source
+        .gateway_output_budget(
+            "universal",
+            "cline-pass/deepseek-v4.1-flash-1017",
+            window - 2_024,
+            None,
+        )
+        .expect("still fits");
+    assert_eq!(tight, 1_000, "window - prompt - 1024 reserve");
+
+    // A prompt that cannot fit reports overflow instead of inventing a budget.
+    assert_eq!(
+        source.gateway_output_budget(
+            "universal",
+            "cline-pass/deepseek-v4.1-flash-1017",
+            window,
+            None
+        ),
+        None,
+        "overflow is an answer, not a zero budget"
+    );
+}

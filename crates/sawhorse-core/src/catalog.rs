@@ -30,6 +30,22 @@ pub trait CatalogSource {
     /// name onto the catalog's provider ids - the bundled source treats the configured name as an
     /// alias when it does not match a catalog provider.
     fn limits(&self, provider: &str, model: &str) -> Option<ModelLimits>;
+
+    /// Gateway output budget for a prompt of `prompt_tokens`, when this source can compute one.
+    ///
+    /// The calculation is not a simple subtraction: it applies a 32,000-token default cap, a
+    /// 1,024-token reserve, a reasoning floor when a thinking budget is set, and reports context
+    /// overflow as an error rather than returning a zero budget. A source that cannot compute it
+    /// returns `None`, which is how callers know to fall back to [`ModelLimits::output_budget`].
+    fn gateway_output_budget(
+        &self,
+        _provider: &str,
+        _model: &str,
+        _prompt_tokens: u32,
+        _requested: Option<u16>,
+    ) -> Option<u16> {
+        None
+    }
 }
 
 /// A source that knows nothing. The offline default, and what tests use when they are not exercising
@@ -60,6 +76,28 @@ pub fn resolve_limits(
         max_output_tokens: declared.max_output_tokens.or(catalog.max_output_tokens),
         reasoning_effort: declared.reasoning_effort.or(catalog.reasoning_effort),
     }
+}
+
+/// Output budget for one request: the catalog's gateway calculation when available, otherwise the
+/// declared-limits approximation.
+///
+/// Order matters. The catalog owns the real rules - cap, reserve, reasoning floor and overflow - so it
+/// answers first. [`ModelLimits::output_budget`] is the fallback for a model the catalog does not know,
+/// and remains the arithmetic `GB-215` shipped: it knows nothing about a reasoning floor because it has
+/// no way to see one.
+#[must_use]
+pub fn output_budget(
+    declared: &ModelLimits,
+    provider: &str,
+    model: &str,
+    prompt_tokens: u32,
+    requested: Option<u16>,
+    source: &dyn CatalogSource,
+) -> Option<u16> {
+    if let Some(budget) = source.gateway_output_budget(provider, model, prompt_tokens, requested) {
+        return Some(budget);
+    }
+    resolve_limits(declared, provider, model, source).output_budget(prompt_tokens)
 }
 
 /// Converts a catalog `u64` window into the contract's `u32`, saturating rather than wrapping.
@@ -109,19 +147,28 @@ impl BundledSource {
 }
 
 #[cfg(feature = "catalog")]
-impl CatalogSource for BundledSource {
-    fn limits(&self, provider: &str, model: &str) -> Option<ModelLimits> {
-        // Try the configured pairing first, then the qualified wire id, then the id alone. The
-        // configured provider name is a local alias (`universal`), while the catalog keys on the
-        // upstream provider, and the wire id already carries its provider prefix.
-        let found = self
-            .snapshot
+impl BundledSource {
+    /// Finds a model, tolerating the three id shapes the suite actually produces.
+    ///
+    /// Tries the configured pairing first, then the qualified wire id, then the id re-qualified under
+    /// the configured provider. The configured provider name is a local alias (`universal`) while the
+    /// catalog keys on the upstream provider, and a wire id already carries its own prefix, so neither
+    /// shape matches on its own.
+    fn find(&self, provider: &str, model: &str) -> Option<&models_catalog::ModelInfo> {
+        self.snapshot
             .get_model(provider, model)
             .or_else(|| self.snapshot.find_model(model))
             .or_else(|| {
                 let (_, tail) = model.split_once('/')?;
                 self.snapshot.find_model(&format!("{provider}/{tail}"))
-            })?;
+            })
+    }
+}
+
+#[cfg(feature = "catalog")]
+impl CatalogSource for BundledSource {
+    fn limits(&self, provider: &str, model: &str) -> Option<ModelLimits> {
+        let found = self.find(provider, model)?;
 
         Some(ModelLimits {
             context_window: found.context_window.map(clamp_u32),
@@ -132,5 +179,36 @@ impl CatalogSource for BundledSource {
             max_output_tokens: Some(u16::try_from(found.max_tokens).unwrap_or(u16::MAX)),
             reasoning_effort: found.default_reasoning_effort.map(map_effort),
         })
+    }
+
+    fn gateway_output_budget(
+        &self,
+        provider: &str,
+        model: &str,
+        prompt_tokens: u32,
+        requested: Option<u16>,
+    ) -> Option<u16> {
+        let found = self.find(provider, model)?;
+        // Computed from the crate's own `u64` limit, never from our clamped `u16`: a model advertising
+        // 384k output would otherwise be budgeted as if it capped at 65,535 before the cap was applied.
+        // No reasoning budget yet - coupling effort to the budget is step 5 of the plan.
+        match found.resolve_gateway_max_output_tokens(
+            u64::from(prompt_tokens),
+            requested.map(u64::from),
+            None,
+        ) {
+            Ok(budget) => Some(u16::try_from(budget).unwrap_or(u16::MAX)),
+            Err(overflow) => {
+                // A prompt that cannot fit is a real answer, not a silent zero budget: report it and
+                // let the caller fall back so the failure surfaces upstream.
+                tracing::warn!(
+                    model = %model,
+                    prompt_tokens = prompt_tokens,
+                    context_window = overflow.context_window,
+                    "prompt does not fit the model's context window"
+                );
+                None
+            }
+        }
     }
 }
