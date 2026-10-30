@@ -49,6 +49,18 @@ pub fn build_payload(
                 body["thinking"] = json!({ "type": "enabled" });
                 body["reasoning"] = json!({ "effort": "high" });
             }
+            // GB-221: the catalog's two upper tiers. Sent verbatim; a provider that does not
+            // advertise them clamps rather than rejecting (measured across all six values).
+            ReasoningEffort::XHigh => {
+                body["reasoning_effort"] = json!("xhigh");
+                body["thinking"] = json!({ "type": "enabled" });
+                body["reasoning"] = json!({ "effort": "xhigh" });
+            }
+            ReasoningEffort::Max => {
+                body["reasoning_effort"] = json!("max");
+                body["thinking"] = json!({ "type": "enabled" });
+                body["reasoning"] = json!({ "effort": "max" });
+            }
         }
     }
 
