@@ -211,3 +211,33 @@ fn test_the_catalog_owns_the_budget_when_it_can_compute_one() {
         "overflow is an answer, not a zero budget"
     );
 }
+
+#[test]
+fn test_a_source_without_catalog_data_flags_nothing_for_streaming() {
+    assert!(!NullSource.requires_streaming("universal", "anything"));
+    assert!(!Stub(None).requires_streaming("universal", "anything"));
+}
+
+#[cfg(feature = "catalog")]
+#[test]
+fn test_streaming_flags_report_what_the_catalog_says() {
+    use super::{BundledSource, CatalogSource};
+
+    let source = BundledSource::load().expect("bundled snapshot");
+    for id in [
+        "cline-pass/deepseek-v4.1-flash-1017",
+        "cline-pass/deepseek-v4.1-flash",
+        "cline-pass/glm-5.3",
+        "cline-pass/kimi-k3",
+        "cline-pass/qwen3.8-max",
+        "cline-pass/deepseek-v4-pro",
+        "cline-pass/minimax-m3",
+    ] {
+        println!(
+            "requires_streaming {id} -> {}",
+            source.requires_streaming("universal", id)
+        );
+    }
+    // An unknown model is not evidence of a constraint.
+    assert!(!source.requires_streaming("universal", "not-a-model"));
+}

@@ -46,6 +46,15 @@ pub trait CatalogSource {
     ) -> Option<u16> {
         None
     }
+
+    /// True when the provider requires this model to be streamed.
+    ///
+    /// Constrained models (some gateways route them through a streaming-only backend) answer a
+    /// non-streamed request with an empty body. Knowing this up front means never sending that
+    /// request: the caller streams first instead of failing and retrying (`GB-214`, `GB-217` step 4).
+    fn requires_streaming(&self, _provider: &str, _model: &str) -> bool {
+        false
+    }
 }
 
 /// A source that knows nothing. The offline default, and what tests use when they are not exercising
@@ -210,5 +219,10 @@ impl CatalogSource for BundledSource {
                 None
             }
         }
+    }
+
+    fn requires_streaming(&self, provider: &str, model: &str) -> bool {
+        self.find(provider, model)
+            .is_some_and(|found| found.requires_streaming)
     }
 }
