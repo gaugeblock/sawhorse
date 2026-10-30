@@ -8,6 +8,9 @@ use anyhow::Result;
 use serde_json::json;
 
 use sawhorse_core::config::SawhorseConfig;
+use sawhorse_core::providers::{
+    CLINE_PASS_CAPTURED, CLINE_PASS_DOCS, CLINE_PASS_MODELS, is_pass_model,
+};
 use sawhorse_core::router::RoleRouter;
 use sawhorse_core::types::ExecutionMode;
 
@@ -86,6 +89,9 @@ pub async fn run_models(
                 "base_url": base_url,
                 "configured": model_name,
                 "configured_is_advertised": advertised_configured,
+                "configured_is_pass_eligible": is_pass_model(model_name),
+                "pass_model_count": CLINE_PASS_MODELS.len(),
+                "pass_captured": CLINE_PASS_CAPTURED,
                 "advertised": models.len(),
                 "models": shown,
             }));
@@ -93,14 +99,14 @@ pub async fn run_models(
         }
 
         println!("{name}  ({base_url})");
-        println!(
-            "  configured: {model_name}{}",
-            if advertised_configured {
-                ""
-            } else {
-                "   <- not advertised by the catalogue"
-            }
-        );
+        let eligibility = if is_pass_model(model_name) {
+            "pass-eligible (documented)".to_string()
+        } else if advertised_configured {
+            "catalogue only - billed as credits, not covered by ClinePass".to_string()
+        } else {
+            "not in the catalogue and not a documented pass id".to_string()
+        };
+        println!("  configured: {model_name}   [{eligibility}]");
         println!("  advertised: {} model(s)", models.len());
         for id in &shown {
             let marker = if id.as_str() == model_name.as_str() {
@@ -108,11 +114,15 @@ pub async fn run_models(
             } else {
                 ""
             };
-            println!("    {id}{marker}");
+            let pass = if is_pass_model(id) { "  [pass]" } else { "" };
+            println!("    {id}{marker}{pass}");
         }
-        if !shown.is_empty() || filter.is_none() {
-            println!();
-        }
+        println!(
+            "  [pass] = curated ClinePass set ({} ids, captured {CLINE_PASS_CAPTURED}); the catalogue
+         lists what exists, not what the subscription covers: {CLINE_PASS_DOCS}",
+            CLINE_PASS_MODELS.len()
+        );
+        println!();
     }
 
     if as_json {

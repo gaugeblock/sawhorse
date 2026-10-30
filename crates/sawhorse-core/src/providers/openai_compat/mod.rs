@@ -1,5 +1,6 @@
 //! Mode 3: OpenAI-compatible HTTP client supporting vLLM, jev, and cloud providers.
 
+pub mod cline_pass;
 pub mod complete;
 pub mod models;
 pub mod payload;
