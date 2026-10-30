@@ -120,9 +120,14 @@ pub fn format_http_error(
         // max_tokens was exhausted, which is one of at least three explanations and was wrong for the
         // case that provoked it: a repeated call showed 2 successes and 3 failures for the same
         // prompt, so the fault was transient (`GB-214`, `GB-215`).
-        message.push_str(&format!(
-            " [diagnostic: the provider returned status {status} with an empty `content`. That is an              observation, not a cause. Three explanations fit and they are distinguishable: (1) a              transient provider or gateway fault - retry the identical request before changing              anything; (2) the model spent its budget on a thinking trace - check              `usage.completion_tokens_details.reasoning_tokens` against max_tokens={max_tokens} on a              call that did return, and lower the reasoning effort or raise the budget; (3) the payload              was rejected or filtered by the gateway - reduce the prompt. Retrying first is the only              one of these that costs nothing.]"
-        ));
+        message.push_str(&format!(concat!(
+            " [diagnostic: the provider returned status {status} with an empty `content`.",
+            " That is an observation, not a cause. Retry the identical request first: that costs",
+            " nothing and settles the cheapest explanation. If it recurs, compare",
+            " `usage.completion_tokens_details.reasoning_tokens` with max_tokens={max_tokens} on a",
+            " call that did return, and if the trace is small treat the payload as rejected. A 500",
+            " that repeats at 4096 and at 32768 tokens alike is not budget exhaustion (GB-214).]"
+        ), status = status, max_tokens = max_tokens));
     }
 
     SawhorseError::Http {
