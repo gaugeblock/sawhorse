@@ -29,7 +29,12 @@ tracing = "0.1"
 # curated ClinePass overlay; `bundled` compiles the snapshot in so no I/O is needed to read it.
 models-catalog = { version = "0.1.0", default-features = false, features = ["cline", "bundled"], optional = true }
 
-# Mode 1: Optional native embedded candle inference
+# Mode 1: Optional native embedded candle inference.
+#
+# KEPT WITH A REASON (GB-201): `miter deps` reports all three as unreferenced because no source
+# file names them outside `#[cfg(feature = "candle")]`, which the scanner strips. They are feature
+# enablement, not dead weight - the `candle` feature below wires them in, and deleting them would
+# break `Mode 1` while still compiling the default build.
 candle-core = { version = "0.11", optional = true }
 candle-transformers = { version = "0.11", optional = true }
 candle-nn = { version = "0.11", optional = true }
