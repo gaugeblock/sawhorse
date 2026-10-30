@@ -135,6 +135,10 @@ impl ModelProvider for OpenAiCompatProvider {
         }
     }
 
+    async fn list_models(&self) -> Result<Vec<String>, SawhorseError> {
+        self.fetch_models().await
+    }
+
     fn provider_name(&self) -> &str {
         &self.name
     }

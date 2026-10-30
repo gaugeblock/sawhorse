@@ -9,7 +9,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 mod commands;
 
 use commands::complete::CompleteArgs;
-use commands::{run_bench, run_complete, run_init, run_ping};
+use commands::{run_bench, run_complete, run_init, run_models, run_ping};
 use sawhorse_core::config::SawhorseConfig;
 use sawhorse_core::types::{GrammarFormat, ModelRole};
 
@@ -88,6 +88,18 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+    /// Lists the models each provider advertises in its catalogue
+    Models {
+        /// Restrict output to one provider
+        #[arg(short, long)]
+        provider: Option<String>,
+        /// Only show model ids containing this substring
+        #[arg(short = 'f', long)]
+        filter: Option<String>,
+        /// Output results as JSON
+        #[arg(long)]
+        json: bool,
+    },
     /// Executes prompt completion across configured roles
     Complete {
         /// Prompt context or instruction
@@ -154,6 +166,11 @@ async fn main() -> Result<()> {
     match cli.command {
         Commands::Init { .. } => unreachable!(),
         Commands::Ping { provider, json } => run_ping(config, provider, json).await,
+        Commands::Models {
+            provider,
+            filter,
+            json,
+        } => run_models(config, provider, filter, json).await,
         Commands::Complete {
             prompt,
             role,

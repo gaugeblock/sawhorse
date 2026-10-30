@@ -1,6 +1,7 @@
 //! Mode 3: OpenAI-compatible HTTP client supporting vLLM, jev, and cloud providers.
 
 pub mod complete;
+pub mod models;
 pub mod payload;
 
 use std::collections::HashMap;

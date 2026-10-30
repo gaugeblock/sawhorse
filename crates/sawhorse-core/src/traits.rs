@@ -27,6 +27,14 @@ pub trait ModelProvider: Send + Sync + std::fmt::Debug {
     /// Performs a health check ping to ensure the provider backend is responsive.
     async fn health_check(&self) -> Result<bool, SawhorseError>;
 
+    /// Lists the model identifiers this backend advertises, when it can be asked.
+    ///
+    /// Defaults to empty because embedded providers serve exactly one model and have nothing to
+    /// enumerate; an OpenAI-compatible endpoint answers `GET {base_url}/models`.
+    async fn list_models(&self) -> Result<Vec<String>, SawhorseError> {
+        Ok(Vec::new())
+    }
+
     /// Returns the unique configured name of this provider.
     fn provider_name(&self) -> &str;
 
