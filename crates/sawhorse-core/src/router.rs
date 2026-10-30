@@ -8,8 +8,10 @@ use tracing::{debug, warn};
 
 use crate::config::schema::{RoleConfig, SawhorseConfig, TimeoutConfig};
 use crate::error::SawhorseError;
-use crate::providers::create_provider;
+use crate::providers::create_provider_with;
 use crate::traits::{ModelProvider, TokenStream};
+#[cfg(feature = "catalog")]
+use crate::types::ExecutionMode;
 use crate::types::{InferenceRequest, InferenceResponse, ModelRole};
 
 /// Router mapping semantic `ModelRole` requests to providers with fallback resilience.
@@ -22,10 +24,30 @@ pub struct RoleRouter {
 
 impl RoleRouter {
     /// Builds a new router from a validated `SawhorseConfig`.
+    ///
+    /// Where the `catalog` feature is enabled, each provider is told whether its model requires
+    /// streamed responses, so a constrained model never receives the non-streamed request that would
+    /// come back with an empty body (`GB-214`, `GB-217`). Without the feature nothing changes.
     pub fn from_config(config: SawhorseConfig) -> Result<Self, SawhorseError> {
+        #[cfg(feature = "catalog")]
+        let catalog = crate::catalog::BundledSource::load().ok();
+
         let mut providers = HashMap::new();
         for (name, p_cfg) in &config.providers {
-            let provider = create_provider(name, p_cfg, &config.timeouts)?;
+            #[cfg(feature = "catalog")]
+            let requires_streaming = catalog.as_ref().is_some_and(|source| {
+                use crate::catalog::CatalogSource;
+                match &p_cfg.mode {
+                    ExecutionMode::OpenAiCompatible { model_name, .. } => {
+                        source.requires_streaming(name, model_name)
+                    }
+                    _ => false,
+                }
+            });
+            #[cfg(not(feature = "catalog"))]
+            let requires_streaming = false;
+
+            let provider = create_provider_with(name, p_cfg, &config.timeouts, requires_streaming)?;
             providers.insert(name.clone(), provider);
         }
 

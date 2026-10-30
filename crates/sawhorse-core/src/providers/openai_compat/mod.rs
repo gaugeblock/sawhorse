@@ -25,9 +25,23 @@ pub struct OpenAiCompatProvider {
     pub(crate) dialect: OpenAiDialect,
     pub(crate) client: reqwest::Client,
     pub(crate) timeout_ms: u64,
+    /// Stream on the first call instead of discovering that the model requires it (`GB-217`).
+    pub(crate) stream_by_default: bool,
 }
 
 impl OpenAiCompatProvider {
+    /// Declares that this provider's model requires streamed responses.
+    ///
+    /// Every cline-pass model in the bundled catalog is flagged `requires_streaming`, and a
+    /// non-streamed request against one answers 500 with an empty body - measured as GB-214 before the
+    /// catalog explained it. Setting this makes the first call a streamed one, so the doomed request is
+    /// never sent.
+    #[must_use]
+    pub fn with_streaming_required(mut self, required: bool) -> Self {
+        self.stream_by_default = required;
+        self
+    }
+
     /// Creates a new OpenAI-compatible provider.
     pub fn new(
         name: impl Into<String>,
@@ -73,6 +87,7 @@ impl OpenAiCompatProvider {
             dialect,
             client,
             timeout_ms,
+            stream_by_default: false,
         })
     }
 

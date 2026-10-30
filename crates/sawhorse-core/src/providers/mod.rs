@@ -21,6 +21,20 @@ pub fn create_provider(
     config: &ProviderConfig,
     timeouts: &TimeoutConfig,
 ) -> Result<Arc<dyn ModelProvider>, SawhorseError> {
+    create_provider_with(name, config, timeouts, false)
+}
+
+/// Like [`create_provider`], but told whether the model requires streamed responses (`GB-217`).
+///
+/// # Errors
+///
+/// As [`create_provider`].
+pub fn create_provider_with(
+    name: &str,
+    config: &ProviderConfig,
+    timeouts: &TimeoutConfig,
+    requires_streaming: bool,
+) -> Result<Arc<dyn ModelProvider>, SawhorseError> {
     let timeout_ms = config
         .timeout_ms
         .unwrap_or(timeouts.inference_timeout_secs * 1000);
@@ -54,7 +68,8 @@ pub fn create_provider(
                 dialect,
                 config.headers.clone(),
                 timeout_ms,
-            )?;
+            )?
+            .with_streaming_required(requires_streaming);
             Ok(Arc::new(provider))
         }
     }

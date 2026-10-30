@@ -18,6 +18,23 @@ use crate::types::{ExecutionMode, InferenceRequest, InferenceResponse};
 impl ModelProvider for OpenAiCompatProvider {
     async fn complete(&self, req: &InferenceRequest) -> Result<InferenceResponse, SawhorseError> {
         let url = format!("{}/chat/completions", self.base_url);
+
+        // A model that requires streaming answers a non-streamed request with an empty body. Stream
+        // first rather than sending a request we know will fail and retrying it (GB-217 step 4).
+        if self.stream_by_default {
+            let start = Instant::now();
+            let text = self.drain_streamed_text(req).await?;
+            debug!(provider = %self.name, "streamed by requirement, not by fallback");
+            return Ok(InferenceResponse {
+                text,
+                prompt_tokens: 0,
+                completion_tokens: 0,
+                latency_ms: start.elapsed().as_millis() as u64,
+                model_used: self.model_name.clone(),
+                reasoning_trace: None,
+                reasoning_tokens: None,
+            });
+        }
         let payload = build_payload(self.dialect, &self.model_name, req, false);
         if let Some(path) = super::dump::maybe_dump(&self.name, &payload) {
             debug!(path = %path.display(), "captured outbound request body");
