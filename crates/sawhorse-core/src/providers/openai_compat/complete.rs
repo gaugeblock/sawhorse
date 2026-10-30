@@ -39,6 +39,25 @@ impl ModelProvider for OpenAiCompatProvider {
         if !resp.status().is_success() {
             let status = resp.status().as_u16();
             let raw_message = resp.text().await.unwrap_or_default();
+            // GB-214: the gateway's non-streaming path can answer 500 "empty response content" for
+            // a body that streams perfectly well - the identical captured body returns 200 with
+            // `stream: true` and 500 with `stream: false`. Retry once in the mode that works rather
+            // than resending a request that fails deterministically.
+            if status == 500
+                && raw_message.contains("empty response content")
+                && let Ok(text) = self.drain_streamed_text(req).await
+            {
+                warn!(provider = %self.name, "recovered empty non-streamed content by streaming");
+                return Ok(InferenceResponse {
+                    text,
+                    prompt_tokens: 0,
+                    completion_tokens: 0,
+                    latency_ms: start.elapsed().as_millis() as u64,
+                    model_used: self.model_name.clone(),
+                    reasoning_trace: None,
+                    reasoning_tokens: None,
+                });
+            }
             return Err(format_http_error(
                 &url,
                 status,
@@ -151,5 +170,17 @@ impl ModelProvider for OpenAiCompatProvider {
 
     fn execution_mode(&self) -> &ExecutionMode {
         &self.mode
+    }
+}
+
+impl OpenAiCompatProvider {
+    /// Drains a streamed completion into one string, for the non-streaming fallback.
+    async fn drain_streamed_text(&self, req: &InferenceRequest) -> Result<String, SawhorseError> {
+        let mut stream = self.complete_stream(req).await?;
+        let mut text = String::new();
+        while let Some(chunk) = stream.next().await {
+            text.push_str(&chunk?);
+        }
+        Ok(text)
     }
 }
