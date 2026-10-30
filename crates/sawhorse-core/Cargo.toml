@@ -23,6 +23,12 @@ tokio = { version = "1.43", features = ["sync", "time", "rt", "macros"] }
 toml = "1.1"
 tracing = "0.1"
 
+# Catalog metadata (GB-217). `default-features = false` is deliberate: the crate's defaults pull
+# reqwest 0.13 + tokio + directories, and sawhorse is on reqwest 0.12 - that would compile a second
+# HTTP stack for a capability sawhorse already has, plus an ambient cache path. `cline` carries the
+# curated ClinePass overlay; `bundled` compiles the snapshot in so no I/O is needed to read it.
+models-catalog = { version = "0.1.0", default-features = false, features = ["cline", "bundled"], optional = true }
+
 # Mode 1: Optional native embedded candle inference
 candle-core = { version = "0.11", optional = true }
 candle-transformers = { version = "0.11", optional = true }
@@ -31,4 +37,7 @@ candle-nn = { version = "0.11", optional = true }
 [features]
 default = []
 candle = ["dep:candle-core", "dep:candle-transformers", "dep:candle-nn"]
+# Catalog-backed model limits (GB-217). Off by default so offline builds and existing tests keep
+# their exact dependency graph; on, it adds a pure synchronous parser and the bundled snapshot.
+catalog = ["dep:models-catalog"]
 

@@ -4,6 +4,7 @@
 //! used by `chalkline` (Phase 3) and `joiner` (Phase 6) to perform 3-mode
 //! inference across embedded Candle models, local GGUFs, and OpenAI endpoints.
 
+pub mod catalog;
 pub mod config;
 pub mod error;
 pub mod providers;
