@@ -19,6 +19,9 @@ impl ModelProvider for OpenAiCompatProvider {
     async fn complete(&self, req: &InferenceRequest) -> Result<InferenceResponse, SawhorseError> {
         let url = format!("{}/chat/completions", self.base_url);
         let payload = build_payload(self.dialect, &self.model_name, req, false);
+        if let Some(path) = super::dump::maybe_dump(&self.name, &payload) {
+            debug!(path = %path.display(), "captured outbound request body");
+        }
         let start = Instant::now();
 
         debug!(
@@ -65,6 +68,9 @@ impl ModelProvider for OpenAiCompatProvider {
 
     async fn complete_stream(&self, req: &InferenceRequest) -> Result<TokenStream, SawhorseError> {
         let payload = build_payload(self.dialect, &self.model_name, req, true);
+        if let Some(path) = super::dump::maybe_dump(&self.name, &payload) {
+            debug!(path = %path.display(), "captured outbound request body");
+        }
         debug!(
             provider = %self.name,
             model = %self.model_name,

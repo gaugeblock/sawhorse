@@ -2,6 +2,7 @@
 
 pub mod cline_pass;
 pub mod complete;
+pub mod dump;
 pub mod models;
 pub mod payload;
 
