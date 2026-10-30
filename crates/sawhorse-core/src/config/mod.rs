@@ -108,6 +108,9 @@ impl Default for SawhorseConfig {
                 dialect: Some(OpenAiDialect::LlamaCpp),
                 headers: None,
                 timeout_ms: None,
+                context_window: None,
+                max_output_tokens: None,
+                reasoning_effort: None,
             },
         );
 
@@ -123,6 +126,9 @@ impl Default for SawhorseConfig {
                 dialect: Some(OpenAiDialect::StandardOpenAi),
                 headers: None,
                 timeout_ms: None,
+                context_window: None,
+                max_output_tokens: None,
+                reasoning_effort: None,
             },
         );
 
