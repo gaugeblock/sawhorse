@@ -18,12 +18,14 @@ pub fn resolve_secret_from_env_file(key: &str) -> Option<String> {
 }
 
 /// Checks a specific directory for `.gaugeblock/.env` or `.env`.
+///
+/// The canonical file is read through `gaugeblock-workspace` so the dotenv format exists once in the
+/// suite. The plain `.env` beside it stays a local concern: it is legacy, and its parser is what the
+/// crate would otherwise have to keep a second copy of.
 pub fn check_dir_for_secret(dir: &Path, key: &str) -> Option<String> {
-    let gb_env = gaugeblock_workspace::GaugeblockPaths::at(dir).env_file();
-    if let Ok(content) = fs::read_to_string(&gb_env)
-        && let Some(val) = parse_env_key(&content, key)
-    {
-        return Some(val);
+    let canonical = gaugeblock_workspace::env_credentials(dir);
+    if let Some(val) = canonical.get(key).filter(|value| !value.trim().is_empty()) {
+        return Some(val.clone());
     }
 
     let dot_env = dir.join(".env");
