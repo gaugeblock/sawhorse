@@ -19,7 +19,7 @@ pub fn resolve_secret_from_env_file(key: &str) -> Option<String> {
 
 /// Checks a specific directory for `.gaugeblock/.env` or `.env`.
 pub fn check_dir_for_secret(dir: &Path, key: &str) -> Option<String> {
-    let gb_env = dir.join(".gaugeblock").join(".env");
+    let gb_env = gaugeblock_workspace::GaugeblockPaths::at(dir).env_file();
     if let Ok(content) = fs::read_to_string(&gb_env)
         && let Some(val) = parse_env_key(&content, key)
     {
