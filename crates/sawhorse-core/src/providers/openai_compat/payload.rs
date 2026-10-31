@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 
 use crate::config::schema::OpenAiDialect;
 use crate::error::SawhorseError;
-use crate::types::{GrammarFormat, InferenceRequest, ReasoningEffort};
+use crate::types::{GrammarFormat, InferenceRequest};
 
 /// Constructs an OpenAI chat completion JSON payload from an `InferenceRequest`.
 pub fn build_payload(
@@ -28,40 +28,13 @@ pub fn build_payload(
     });
 
     if let Some(effort) = req.reasoning_effort {
-        match effort {
-            ReasoningEffort::None => {
-                body["reasoning_effort"] = json!("none");
-                body["thinking"] = json!({ "type": "disabled" });
-                body["reasoning"] = json!({ "effort": "none" });
-            }
-            ReasoningEffort::Low => {
-                body["reasoning_effort"] = json!("low");
-                body["thinking"] = json!({ "type": "enabled" });
-                body["reasoning"] = json!({ "effort": "low" });
-            }
-            ReasoningEffort::Medium => {
-                body["reasoning_effort"] = json!("medium");
-                body["thinking"] = json!({ "type": "enabled" });
-                body["reasoning"] = json!({ "effort": "medium" });
-            }
-            ReasoningEffort::High => {
-                body["reasoning_effort"] = json!("high");
-                body["thinking"] = json!({ "type": "enabled" });
-                body["reasoning"] = json!({ "effort": "high" });
-            }
-            // GB-221: the catalog's two upper tiers. Sent verbatim; a provider that does not
-            // advertise them clamps rather than rejecting (measured across all six values).
-            ReasoningEffort::XHigh => {
-                body["reasoning_effort"] = json!("xhigh");
-                body["thinking"] = json!({ "type": "enabled" });
-                body["reasoning"] = json!({ "effort": "xhigh" });
-            }
-            ReasoningEffort::Max => {
-                body["reasoning_effort"] = json!("max");
-                body["thinking"] = json!({ "type": "enabled" });
-                body["reasoning"] = json!({ "effort": "max" });
-            }
-        }
+        // ONE encoding, not three. This used to emit `reasoning_effort`, `thinking` and
+        // `reasoning` together - three dialect spellings of the same instruction, captured in a
+        // request dump during GB-214 and shipped anyway because the gateway tolerated it. Sending
+        // one canonical field is what every OpenAI-compatible endpoint understands, and it removes
+        // the possibility of the three disagreeing. Per-protocol selection is GB-217 step 5b: the
+        // catalog can name Anthropic budgets, GLM toggles and Gemini budgets, which this cannot.
+        body["reasoning_effort"] = json!(effort.wire_token());
     }
 
     if let Some(ref grammar) = req.grammar_constraint {
