@@ -15,40 +15,12 @@ mod tests;
 
 pub(crate) mod lookup;
 
-pub use lookup::{knows, pass_eligibility, wire_reasoning};
+pub use lookup::{WireReasoning, knows, pass_eligibility, wire_reasoning};
 
 use crate::config::schema::ModelLimits;
 // Only the feature-gated mapping names this type.
 #[cfg(feature = "catalog")]
 use crate::types::ReasoningEffort;
-
-/// How a reasoning request is expressed on the wire for one model.
-///
-/// The catalog knows which shape a protocol speaks - an effort string, a thinking toggle, an Anthropic
-/// token budget, a Gemini budget - and this enum is the suite's own mirror of that answer, so the
-/// dependency does not leak into payload signatures (`GB-217` step 5b).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum WireReasoning {
-    /// Reasoning is off; send nothing.
-    Disabled,
-    /// OpenAI-compatible effort string.
-    Effort(&'static str),
-    /// GLM / DeepSeek thinking toggle.
-    ThinkingToggle {
-        /// Whether thinking is on.
-        enabled: bool,
-    },
-    /// Anthropic extended-thinking budget.
-    ThinkingBudget {
-        /// Tokens reserved for the thinking trace.
-        budget_tokens: u64,
-    },
-    /// Gemini thinking budget.
-    GoogleBudget {
-        /// Tokens reserved for thinking.
-        thinking_budget: u64,
-    },
-}
 
 /// Answers what the published catalog knows about a model.
 ///

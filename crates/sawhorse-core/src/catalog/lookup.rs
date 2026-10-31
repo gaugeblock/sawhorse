@@ -51,6 +51,34 @@ pub fn pass_eligibility(model_id: &str) -> Option<bool> {
     }
 }
 
+/// How a reasoning request is expressed on the wire for one model.
+///
+/// The catalog knows which shape a protocol speaks - an effort string, a thinking toggle, an Anthropic
+/// token budget, a Gemini budget - and this enum is the suite's own mirror of that answer, so the
+/// dependency does not leak into payload signatures (`GB-217` step 5b).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WireReasoning {
+    /// Reasoning is off; send nothing.
+    Disabled,
+    /// OpenAI-compatible effort string.
+    Effort(&'static str),
+    /// GLM / DeepSeek thinking toggle.
+    ThinkingToggle {
+        /// Whether thinking is on.
+        enabled: bool,
+    },
+    /// Anthropic extended-thinking budget.
+    ThinkingBudget {
+        /// Tokens reserved for the thinking trace.
+        budget_tokens: u64,
+    },
+    /// Gemini thinking budget.
+    GoogleBudget {
+        /// Tokens reserved for thinking.
+        thinking_budget: u64,
+    },
+}
+
 /// How to express `effort` for this model on the wire, when the catalog can say.
 ///
 /// `None` means the catalog has no opinion - an unknown id, or the feature is off - and the caller
@@ -60,13 +88,13 @@ pub fn wire_reasoning(
     model_id: &str,
     effort: crate::types::ReasoningEffort,
     max_output_tokens: u16,
-) -> Option<crate::catalog::WireReasoning> {
+) -> Option<WireReasoning> {
     // `None` is a caller policy decision - "do not spend budget on thinking" - not an effort to be
     // clamped into the nearest supported tier. The catalog clamps it upward when a model has no
     // declared options (it assumes Low/Medium/High), which would switch thinking ON for a caller who
     // asked for it off; that is how GB-206/GB-212 lost whole budgets.
     if effort == crate::types::ReasoningEffort::None {
-        return Some(crate::catalog::WireReasoning::Disabled);
+        return Some(WireReasoning::Disabled);
     }
 
     #[cfg(feature = "catalog")]
@@ -81,11 +109,9 @@ pub fn wire_reasoning(
             u64::from(max_output_tokens),
         );
         Some(match params {
-            models_catalog::WireReasoningParams::Disabled => {
-                crate::catalog::WireReasoning::Disabled
-            }
+            models_catalog::WireReasoningParams::Disabled => WireReasoning::Disabled,
             models_catalog::WireReasoningParams::OpenAiEffort { reasoning_effort } => {
-                crate::catalog::WireReasoning::Effort(match reasoning_effort.as_str() {
+                WireReasoning::Effort(match reasoning_effort.as_str() {
                     "low" => "low",
                     "medium" => "medium",
                     "high" => "high",
@@ -95,13 +121,13 @@ pub fn wire_reasoning(
                 })
             }
             models_catalog::WireReasoningParams::ThinkingToggle { enabled } => {
-                crate::catalog::WireReasoning::ThinkingToggle { enabled }
+                WireReasoning::ThinkingToggle { enabled }
             }
             models_catalog::WireReasoningParams::AnthropicThinking { budget_tokens } => {
-                crate::catalog::WireReasoning::ThinkingBudget { budget_tokens }
+                WireReasoning::ThinkingBudget { budget_tokens }
             }
             models_catalog::WireReasoningParams::GoogleThinking { thinking_budget } => {
-                crate::catalog::WireReasoning::GoogleBudget { thinking_budget }
+                WireReasoning::GoogleBudget { thinking_budget }
             }
         })
     }
@@ -123,5 +149,25 @@ fn map_effort(effort: crate::types::ReasoningEffort) -> models_catalog::Reasonin
         O::High => C::High,
         O::XHigh => C::XHigh,
         O::Max => C::Max,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used)]
+
+    use super::{WireReasoning, wire_reasoning};
+    use crate::types::ReasoningEffort;
+
+    #[test]
+    fn test_none_effort_is_policy_not_something_to_clamp() {
+        // GB-217 step 5b: the catalog clamps an unsupported effort up to the nearest tier, and for a model
+        // with no declared options it assumes Low/Medium/High - so `none` became "thinking enabled", which
+        // is the exact thing GB-206 and GB-212 disabled to stop the trace eating the token budget.
+        // A caller asking for no thinking must get no thinking.
+        assert_eq!(
+            wire_reasoning("any/model", ReasoningEffort::None, 4096),
+            Some(WireReasoning::Disabled)
+        );
     }
 }

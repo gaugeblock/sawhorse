@@ -241,15 +241,3 @@ fn test_streaming_flags_report_what_the_catalog_says() {
     // An unknown model is not evidence of a constraint.
     assert!(!source.requires_streaming("universal", "not-a-model"));
 }
-
-#[test]
-fn test_none_effort_is_policy_not_something_to_clamp() {
-    // GB-217 step 5b: the catalog clamps an unsupported effort up to the nearest tier, and for a model
-    // with no declared options it assumes Low/Medium/High - so `none` became "thinking enabled", which
-    // is the exact thing GB-206 and GB-212 disabled to stop the trace eating the token budget.
-    // A caller asking for no thinking must get no thinking.
-    assert_eq!(
-        super::lookup::wire_reasoning("any/model", ReasoningEffort::None, 4096),
-        Some(super::WireReasoning::Disabled)
-    );
-}
