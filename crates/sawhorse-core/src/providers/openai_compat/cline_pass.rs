@@ -1,79 +1,33 @@
-//! The documented ClinePass model set.
+//! Where the ClinePass model set comes from.
 //!
 //! ClinePass is a *curated* subscription set, not a namespace: prefixing an arbitrary catalogue id
-//! with `cline-pass/` does not make it pass-eligible, and the set changes as models are added and
-//! deprecated (`GB-210`). Discovery alone therefore cannot answer "may I use this" - the catalogue
-//! lists 439 ids, of which the pass covers the ones below.
+//! with `cline-pass/` does not make it pass-eligible, and the set moves as models are added and
+//! deprecated. This file used to hold a hand-copied list of fifteen ids with a capture date and a
+//! scraper to refresh it (`GB-210`), and the list was stale within days of being written.
 //!
-//! Source: <https://docs.cline.bot/getting-started/clinepass#models>, captured 2026-10-29.
-//! Refresh with `scripts/refresh-cline-pass.sh`, which re-reads the page's markdown form. Do not
-//! extend this list by inference; an id is here only because the documentation says so.
+//! The set now comes from the catalog (`GB-217` step 7): `catalog::pass_eligibility` reads the
+//! curated overlay's billing tier, and answers `None` when it has not heard of an id rather than
+//! guessing `false`. The ids themselves are no longer duplicated here at all.
 
-/// Documentation URL the list was captured from.
+/// Documentation for the ClinePass subscription, kept as the human reference.
 pub const CLINE_PASS_DOCS: &str = "https://docs.cline.bot/getting-started/clinepass#models";
-
-/// Date the list below was captured, so a stale list is recognisable rather than authoritative.
-pub const CLINE_PASS_CAPTURED: &str = "2026-10-29";
-
-/// Model ids the subscription covers, sorted.
-pub const CLINE_PASS_MODELS: &[&str] = &[
-    "cline-pass/deepseek-v4-pro",
-    "cline-pass/deepseek-v4.1-flash",
-    "cline-pass/deepseek-v4.1-flash-1017",
-    "cline-pass/glm-5.3",
-    "cline-pass/glm-5.3-flash",
-    "cline-pass/kimi-k3",
-    "cline-pass/kimi-k3.1-pro",
-    "cline-pass/mimo-v2.6-flash",
-    "cline-pass/mimo-v2.6-pro",
-    "cline-pass/minimax-m3",
-    "cline-pass/minimax-m3.1-flash",
-    "cline-pass/muse-spark-1.3-contributor",
-    "cline-pass/qwen3.7-max",
-    "cline-pass/qwen3.7-plus",
-    "cline-pass/qwen3.8-max",
-];
-
-/// True when `model_id` is in the documented pass set for the captured date.
-#[must_use]
-pub fn is_pass_model(model_id: &str) -> bool {
-    CLINE_PASS_MODELS.contains(&model_id)
-}
-
-/// Models that were removed from the pass, kept so a stale config can be explained rather than
-/// looking like a typo.
-pub const CLINE_PASS_DEPRECATED: &[&str] = &[
-    "cline-pass/deepseek-v4-flash",
-    "cline-pass/glm-5.2",
-    "cline-pass/kimi-k2.6",
-    "cline-pass/kimi-k2.7-code",
-];
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::unwrap_used, clippy::expect_used)]
-
-    use super::{CLINE_PASS_MODELS, is_pass_model};
+    use crate::catalog::pass_eligibility;
 
     #[test]
-    fn test_the_requested_model_is_in_the_documented_set() {
-        assert!(is_pass_model("cline-pass/deepseek-v4.1-flash-1017"));
-    }
-
-    #[test]
-    fn test_a_catalogue_id_is_not_pass_eligible_by_prefixing() {
-        assert!(
-            !is_pass_model("cline-pass/openai/gpt-6.1-terra"),
-            "the pass is a curated set, not a namespace (GB-210)"
+    fn test_without_catalog_data_eligibility_is_unknown_not_false() {
+        // The distinction that matters: the deleted list answered `false` for every id it had not
+        // heard of, which reported eligible models as ineligible.
+        let answer = pass_eligibility("cline-pass/deepseek-v4.1-flash-1017");
+        #[cfg(not(feature = "catalog"))]
+        assert_eq!(answer, None);
+        #[cfg(feature = "catalog")]
+        assert_eq!(
+            answer,
+            Some(true),
+            "the curated feed marks this id subscription-tier"
         );
-        assert!(!is_pass_model("deepseek/deepseek-v4.1-flash-1017"));
-    }
-
-    #[test]
-    fn test_the_list_is_sorted_and_unique() {
-        let mut sorted = CLINE_PASS_MODELS.to_vec();
-        sorted.sort_unstable();
-        sorted.dedup();
-        assert_eq!(sorted, CLINE_PASS_MODELS.to_vec());
     }
 }

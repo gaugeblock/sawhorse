@@ -8,9 +8,7 @@ use anyhow::Result;
 use serde_json::json;
 
 use sawhorse_core::config::SawhorseConfig;
-use sawhorse_core::providers::{
-    CLINE_PASS_CAPTURED, CLINE_PASS_DOCS, CLINE_PASS_MODELS, is_pass_model,
-};
+use sawhorse_core::providers::CLINE_PASS_DOCS;
 use sawhorse_core::router::RoleRouter;
 use sawhorse_core::types::ExecutionMode;
 
@@ -84,14 +82,23 @@ pub async fn run_models(
             .collect();
 
         if as_json {
+            // `null` for eligibility means the catalog has not heard of the id. That is deliberately
+            // not `false`: the deleted hardcoded list said false for everything it did not know,
+            // which reported eligible models as ineligible (GB-210, GB-217).
+            let catalog_limits = sawhorse_core::catalog::pass_eligibility(model_name)
+                .map(|eligible| json!({ "pass_eligible": eligible }));
+            // Two different questions, reported separately instead of conflated: what the
+            // endpoint will serve, and what the catalog says exists.
+            let known_to_catalog = sawhorse_core::catalog::knows(model_name);
             reports.push(json!({
                 "provider": name,
                 "base_url": base_url,
                 "configured": model_name,
-                "configured_is_advertised": advertised_configured,
-                "configured_is_pass_eligible": is_pass_model(model_name),
-                "pass_model_count": CLINE_PASS_MODELS.len(),
-                "pass_captured": CLINE_PASS_CAPTURED,
+                "configured_is_advertised": advertised_configured || known_to_catalog,
+                "configured_advertised_by_endpoint": advertised_configured,
+                "configured_known_to_catalog": known_to_catalog,
+                "configured_is_pass_eligible": sawhorse_core::catalog::pass_eligibility(model_name),
+                "catalog": catalog_limits,
                 "advertised": models.len(),
                 "models": shown,
             }));
@@ -99,12 +106,15 @@ pub async fn run_models(
         }
 
         println!("{name}  ({base_url})");
-        let eligibility = if is_pass_model(model_name) {
-            "pass-eligible (documented)".to_string()
-        } else if advertised_configured {
-            "catalogue only - billed as credits, not covered by ClinePass".to_string()
-        } else {
-            "not in the catalogue and not a documented pass id".to_string()
+        let eligibility = match sawhorse_core::catalog::pass_eligibility(model_name) {
+            Some(true) => "pass-eligible (catalog subscription tier)".to_string(),
+            Some(false) => {
+                "catalogue only - billed as credits, not covered by ClinePass".to_string()
+            }
+            None if advertised_configured => {
+                "advertised; catalog does not know its tier".to_string()
+            }
+            None => "not advertised, and the catalog does not know it".to_string(),
         };
         println!("  configured: {model_name}   [{eligibility}]");
         println!("  advertised: {} model(s)", models.len());
@@ -114,13 +124,15 @@ pub async fn run_models(
             } else {
                 ""
             };
-            let pass = if is_pass_model(id) { "  [pass]" } else { "" };
+            let pass = match sawhorse_core::catalog::pass_eligibility(id) {
+                Some(true) => "  [pass]",
+                _ => "",
+            };
             println!("    {id}{marker}{pass}");
         }
         println!(
-            "  [pass] = curated ClinePass set ({} ids, captured {CLINE_PASS_CAPTURED}); the catalogue
-         lists what exists, not what the subscription covers: {CLINE_PASS_DOCS}",
-            CLINE_PASS_MODELS.len()
+            "  [pass] = subscription tier, from the catalog rather than a hand-copied list; the
+         catalogue lists what exists, not what the subscription covers: {CLINE_PASS_DOCS}"
         );
         println!();
     }

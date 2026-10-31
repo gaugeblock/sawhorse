@@ -75,7 +75,5 @@ pub fn create_provider_with(
     }
 }
 
-/// The documented ClinePass model set, so callers can label ids without re-deriving it.
-pub use openai_compat::cline_pass::{
-    CLINE_PASS_CAPTURED, CLINE_PASS_DOCS, CLINE_PASS_MODELS, is_pass_model,
-};
+/// Documentation pointer for the ClinePass subscription; the set itself comes from the catalog.
+pub use openai_compat::cline_pass::CLINE_PASS_DOCS;
