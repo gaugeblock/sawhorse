@@ -9,7 +9,7 @@ use serde_json::Value;
 use tracing::{debug, warn};
 
 use super::OpenAiCompatProvider;
-use super::payload::{build_payload, extract_chat_response, format_http_error};
+use super::payload::{build_payload_with, extract_chat_response, format_http_error};
 use crate::error::SawhorseError;
 use crate::traits::{ModelProvider, TokenStream};
 use crate::types::{ExecutionMode, InferenceRequest, InferenceResponse};
@@ -35,7 +35,8 @@ impl ModelProvider for OpenAiCompatProvider {
                 reasoning_tokens: None,
             });
         }
-        let payload = build_payload(self.dialect, &self.model_name, req, false);
+        let wire = self.wire_reasoning(req);
+        let payload = build_payload_with(self.dialect, &self.model_name, req, false, wire);
         if let Some(path) = super::dump::maybe_dump(&self.name, &payload) {
             debug!(path = %path.display(), "captured outbound request body");
         }
@@ -103,7 +104,8 @@ impl ModelProvider for OpenAiCompatProvider {
     }
 
     async fn complete_stream(&self, req: &InferenceRequest) -> Result<TokenStream, SawhorseError> {
-        let payload = build_payload(self.dialect, &self.model_name, req, true);
+        let wire = self.wire_reasoning(req);
+        let payload = build_payload_with(self.dialect, &self.model_name, req, true, wire);
         if let Some(path) = super::dump::maybe_dump(&self.name, &payload) {
             debug!(path = %path.display(), "captured outbound request body");
         }
@@ -191,6 +193,15 @@ impl ModelProvider for OpenAiCompatProvider {
 }
 
 impl OpenAiCompatProvider {
+    /// The catalog's wire shape for this request's reasoning, when it has an opinion.
+    ///
+    /// `None` keeps the canonical single field, which is what a model with no catalog entry (or a
+    /// build without the `catalog` feature) gets (`GB-217` step 5b).
+    fn wire_reasoning(&self, req: &InferenceRequest) -> Option<crate::catalog::WireReasoning> {
+        let effort = req.reasoning_effort?;
+        crate::catalog::wire_reasoning(&self.model_name, effort, req.max_tokens)
+    }
+
     /// Drains a streamed completion into one string, for the non-streaming fallback.
     async fn drain_streamed_text(&self, req: &InferenceRequest) -> Result<String, SawhorseError> {
         let mut stream = self.complete_stream(req).await?;

@@ -13,14 +13,42 @@
 #[path = "catalog_tests.rs"]
 mod tests;
 
-mod lookup;
+pub(crate) mod lookup;
 
-pub use lookup::{knows, pass_eligibility};
+pub use lookup::{knows, pass_eligibility, wire_reasoning};
 
 use crate::config::schema::ModelLimits;
 // Only the feature-gated mapping names this type.
 #[cfg(feature = "catalog")]
 use crate::types::ReasoningEffort;
+
+/// How a reasoning request is expressed on the wire for one model.
+///
+/// The catalog knows which shape a protocol speaks - an effort string, a thinking toggle, an Anthropic
+/// token budget, a Gemini budget - and this enum is the suite's own mirror of that answer, so the
+/// dependency does not leak into payload signatures (`GB-217` step 5b).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WireReasoning {
+    /// Reasoning is off; send nothing.
+    Disabled,
+    /// OpenAI-compatible effort string.
+    Effort(&'static str),
+    /// GLM / DeepSeek thinking toggle.
+    ThinkingToggle {
+        /// Whether thinking is on.
+        enabled: bool,
+    },
+    /// Anthropic extended-thinking budget.
+    ThinkingBudget {
+        /// Tokens reserved for the thinking trace.
+        budget_tokens: u64,
+    },
+    /// Gemini thinking budget.
+    GoogleBudget {
+        /// Tokens reserved for thinking.
+        thinking_budget: u64,
+    },
+}
 
 /// Answers what the published catalog knows about a model.
 ///
@@ -167,6 +195,17 @@ impl BundledSource {
     /// the configured provider. The configured provider name is a local alias (`universal`) while the
     /// catalog keys on the upstream provider, and a wire id already carries its own prefix, so neither
     /// shape matches on its own.
+    /// Protocol this model's provider speaks.
+    ///
+    /// The protocol belongs to the provider spec, not the model, which is why wire reasoning has to ask
+    /// twice: once for the model's options, once for its provider's dialect (`GB-217` step 5b).
+    pub(super) fn protocol_of(
+        &self,
+        model: &models_catalog::ModelInfo,
+    ) -> models_catalog::ProviderProtocol {
+        self.snapshot.provider_protocol(&model.provider_id)
+    }
+
     fn find(&self, provider: &str, model: &str) -> Option<&models_catalog::ModelInfo> {
         self.snapshot
             .get_model(provider, model)

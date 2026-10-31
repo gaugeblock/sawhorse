@@ -6,12 +6,28 @@ use crate::config::schema::OpenAiDialect;
 use crate::error::SawhorseError;
 use crate::types::{GrammarFormat, InferenceRequest};
 
-/// Constructs an OpenAI chat completion JSON payload from an `InferenceRequest`.
+/// Builds a payload without catalog guidance.
+#[must_use]
 pub fn build_payload(
     dialect: OpenAiDialect,
     model_name: &str,
     req: &InferenceRequest,
     stream: bool,
+) -> Value {
+    build_payload_with(dialect, model_name, req, stream, None)
+}
+
+/// Constructs an OpenAI chat completion JSON payload from an `InferenceRequest`.
+///
+/// `wire` is the catalog's answer for how this model's protocol expresses reasoning. Without it the
+/// payload falls back to the one canonical `reasoning_effort` field (`GB-217` step 5/5b).
+#[must_use]
+pub fn build_payload_with(
+    dialect: OpenAiDialect,
+    model_name: &str,
+    req: &InferenceRequest,
+    stream: bool,
+    wire: Option<crate::catalog::WireReasoning>,
 ) -> Value {
     let mut messages = Vec::new();
     if let Some(ref sys) = req.system_prompt {
@@ -27,13 +43,26 @@ pub fn build_payload(
         "stream": stream,
     });
 
-    if let Some(effort) = req.reasoning_effort {
-        // ONE encoding, not three. This used to emit `reasoning_effort`, `thinking` and
-        // `reasoning` together - three dialect spellings of the same instruction, captured in a
-        // request dump during GB-214 and shipped anyway because the gateway tolerated it. Sending
-        // one canonical field is what every OpenAI-compatible endpoint understands, and it removes
-        // the possibility of the three disagreeing. Per-protocol selection is GB-217 step 5b: the
-        // catalog can name Anthropic budgets, GLM toggles and Gemini budgets, which this cannot.
+    if let Some(wire) = wire {
+        // The catalog named the shape this protocol speaks - an effort string, a thinking toggle, an
+        // Anthropic budget or a Gemini budget. Sending the right one is the whole point of step 5b.
+        match wire {
+            crate::catalog::WireReasoning::Disabled => {}
+            crate::catalog::WireReasoning::Effort(token) => {
+                body["reasoning_effort"] = json!(token);
+            }
+            crate::catalog::WireReasoning::ThinkingToggle { enabled } => {
+                body["thinking"] = json!({ "type": if enabled { "enabled" } else { "disabled" } });
+            }
+            crate::catalog::WireReasoning::ThinkingBudget { budget_tokens } => {
+                body["thinking"] = json!({ "type": "enabled", "budget_tokens": budget_tokens });
+            }
+            crate::catalog::WireReasoning::GoogleBudget { thinking_budget } => {
+                body["thinkingConfig"] = json!({ "thinkingBudget": thinking_budget });
+            }
+        }
+    } else if let Some(effort) = req.reasoning_effort {
+        // No catalog opinion: one canonical field, which every OpenAI-compatible endpoint reads.
         body["reasoning_effort"] = json!(effort.wire_token());
     }
 

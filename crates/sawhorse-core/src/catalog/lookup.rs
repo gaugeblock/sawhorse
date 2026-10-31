@@ -50,3 +50,78 @@ pub fn pass_eligibility(model_id: &str) -> Option<bool> {
         None
     }
 }
+
+/// How to express `effort` for this model on the wire, when the catalog can say.
+///
+/// `None` means the catalog has no opinion - an unknown id, or the feature is off - and the caller
+/// should fall back to the canonical `reasoning_effort` field.
+#[must_use]
+pub fn wire_reasoning(
+    model_id: &str,
+    effort: crate::types::ReasoningEffort,
+    max_output_tokens: u16,
+) -> Option<crate::catalog::WireReasoning> {
+    // `None` is a caller policy decision - "do not spend budget on thinking" - not an effort to be
+    // clamped into the nearest supported tier. The catalog clamps it upward when a model has no
+    // declared options (it assumes Low/Medium/High), which would switch thinking ON for a caller who
+    // asked for it off; that is how GB-206/GB-212 lost whole budgets.
+    if effort == crate::types::ReasoningEffort::None {
+        return Some(crate::catalog::WireReasoning::Disabled);
+    }
+
+    #[cfg(feature = "catalog")]
+    {
+        let source = BundledSource::load().ok()?;
+        let model = source.find("", model_id)?;
+        let requested = map_effort(effort);
+        let effort = model.normalize_reasoning_effort(requested)?;
+        let params = model.to_wire_reasoning_params(
+            source.protocol_of(model),
+            effort,
+            u64::from(max_output_tokens),
+        );
+        Some(match params {
+            models_catalog::WireReasoningParams::Disabled => {
+                crate::catalog::WireReasoning::Disabled
+            }
+            models_catalog::WireReasoningParams::OpenAiEffort { reasoning_effort } => {
+                crate::catalog::WireReasoning::Effort(match reasoning_effort.as_str() {
+                    "low" => "low",
+                    "medium" => "medium",
+                    "high" => "high",
+                    "xhigh" => "xhigh",
+                    "max" => "max",
+                    _ => "none",
+                })
+            }
+            models_catalog::WireReasoningParams::ThinkingToggle { enabled } => {
+                crate::catalog::WireReasoning::ThinkingToggle { enabled }
+            }
+            models_catalog::WireReasoningParams::AnthropicThinking { budget_tokens } => {
+                crate::catalog::WireReasoning::ThinkingBudget { budget_tokens }
+            }
+            models_catalog::WireReasoningParams::GoogleThinking { thinking_budget } => {
+                crate::catalog::WireReasoning::GoogleBudget { thinking_budget }
+            }
+        })
+    }
+    #[cfg(not(feature = "catalog"))]
+    {
+        let _ = (model_id, effort, max_output_tokens);
+        None
+    }
+}
+
+#[cfg(feature = "catalog")]
+fn map_effort(effort: crate::types::ReasoningEffort) -> models_catalog::ReasoningEffort {
+    use crate::types::ReasoningEffort as O;
+    use models_catalog::ReasoningEffort as C;
+    match effort {
+        O::None => C::None,
+        O::Low => C::Low,
+        O::Medium => C::Medium,
+        O::High => C::High,
+        O::XHigh => C::XHigh,
+        O::Max => C::Max,
+    }
+}
