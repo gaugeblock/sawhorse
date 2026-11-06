@@ -763,7 +763,9 @@ dependencies = [
 name = "gaugeblock-workspace"
 version = "0.1.0-beta.1"
 dependencies = [
+ "gaugeblock-contracts",
  "gaugeblock-git",
+ "serde_json",
  "thiserror 2.0.21",
  "toml",
 ]
@@ -1971,6 +1973,7 @@ dependencies = [
  "tokio",
  "toml",
  "tracing",
+ "uuid",
 ]
 
 [[package]]
@@ -2584,6 +2587,7 @@ version = "1.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a0e2d11620c50695fe12bbbfde96b3477fe606e7284c22d505c12ce51214514"
 dependencies = [
+ "getrandom 0.4.3",
  "js-sys",
  "serde_core",
  "wasm-bindgen",
@@ -3097,6 +3101,10 @@ name = "gaugeblock-common"
 version = "0.1.0-beta.1"
 
 [[patch.unused]]
+name = "gaugeblock-inventory"
+version = "0.1.0-beta.1"
+
+[[patch.unused]]
 name = "gaugeblock-mcp"
 version = "0.1.0-beta.1"
 
@@ -3117,6 +3125,10 @@ name = "joiner-mcp"
 version = "0.1.0-beta.4"
 
 [[patch.unused]]
+name = "miter-analysis"
+version = "0.1.0-beta.4"
+
+[[patch.unused]]
 name = "miter-ast"
 version = "0.1.0-beta.4"
 
@@ -3134,6 +3146,10 @@ version = "0.1.0-beta.4"
 
 [[patch.unused]]
 name = "miter-mcp"
+version = "0.1.0-beta.4"
+
+[[patch.unused]]
+name = "miter-polyglot"
 version = "0.1.0-beta.4"
 
 [[patch.unused]]

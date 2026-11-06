@@ -23,6 +23,10 @@ thiserror = "2.0"
 tokio = { version = "1.43", features = ["sync", "time", "rt", "macros"] }
 toml = "1.1"
 tracing = "0.1"
+# Span ids for the flight recorder (GB-243). `v4` is required because sawhorse mints a trace id when
+# it runs outside an instrumented `outfeed gate` step; without it a call made by hand would record no
+# timing at all, which is most of what the Law 12 percentile tables need.
+uuid = { version = "1", features = ["v4"] }
 
 # Catalog metadata (GB-217). `default-features = false` is deliberate: the crate's defaults pull
 # reqwest 0.13 + tokio + directories, and sawhorse is on reqwest 0.12 - that would compile a second

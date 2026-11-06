@@ -86,7 +86,28 @@ impl RoleRouter {
     }
 
     /// Dispatches an inference request through the role's primary provider and fallback chain.
+    ///
+    /// The clock is captured before the await and the span is appended after it (`GB-243`), rather than
+    /// wrapping the body in a guard: a guard writes on `Drop`, so holding one across this boundary would
+    /// make the future non-`Send` and propagate that bound into [`ModelProvider`] and every caller.
     pub async fn complete(
+        &self,
+        req: &InferenceRequest,
+    ) -> Result<InferenceResponse, SawhorseError> {
+        let started_at_ms = gaugeblock_workspace::now_ms();
+        let result = self.dispatch_chain(req).await;
+        match &result {
+            Ok(_) => crate::telemetry::record_completion(started_at_ms, Ok(())),
+            Err(err) => {
+                let diagnostic = err.to_string();
+                crate::telemetry::record_completion(started_at_ms, Err(&diagnostic));
+            }
+        }
+        result
+    }
+
+    /// Walks the role's provider chain, returning the first success.
+    async fn dispatch_chain(
         &self,
         req: &InferenceRequest,
     ) -> Result<InferenceResponse, SawhorseError> {

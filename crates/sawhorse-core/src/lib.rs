@@ -9,6 +9,7 @@ pub mod config;
 pub mod error;
 pub mod providers;
 pub mod router;
+pub mod telemetry;
 pub mod traits;
 pub mod types;
 
