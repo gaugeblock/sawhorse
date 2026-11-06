@@ -23,3 +23,6 @@ Thumbs.db
 sawhorse.toml
 models/
 
+
+# Flight-recorder spans (GB-243): append-only machine state, not source.
+.gaugeblock/telemetry/
