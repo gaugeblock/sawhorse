@@ -14,7 +14,7 @@ use gaugeblock_workspace::{GaugeblockPaths, append_span, now_ms};
 use uuid::Uuid;
 
 /// Trace id of the run this process belongs to, set by the parent so child spans join it.
-pub const TRACE_ENV: &str = "GAUGEBLOCK_TRACE_ID";
+pub use gaugeblock_workspace::TRACE_ENV;
 
 /// Records one completed provider call against the suite's telemetry log.
 ///
@@ -37,12 +37,12 @@ pub fn record_completion(started_at_ms: u64, outcome: Result<(), &str>) {
 }
 
 /// The trace id this process shares with its parent, or a fresh one when it is running alone.
+///
+/// The variable name and the parse come from `gaugeblock_workspace`, so no two tools can disagree about
+/// what `GAUGEBLOCK_TRACE_ID` means; only the minting decision is local.
 #[must_use]
 pub fn trace_id_from_env() -> Uuid {
-    std::env::var(TRACE_ENV)
-        .ok()
-        .and_then(|raw| Uuid::parse_str(raw.trim()).ok())
-        .unwrap_or_else(Uuid::new_v4)
+    gaugeblock_workspace::ambient_trace_id().unwrap_or_else(Uuid::new_v4)
 }
 
 /// Builds the span for a completion that ran from `started_at_ms` to `closed_at_ms`.
