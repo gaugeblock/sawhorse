@@ -8,3 +8,4 @@
 {"event":"status_changed","task_id":"3aa3a919-1f1f-49cb-b947-28dc7fc61403","from":"verified","to":"archived","reason":"Archived out of active backlog","timestamp_ms":1793289281177}
 {"event":"status_changed","task_id":"d2ef473c-5257-4a23-8d8a-cba2beefe18e","from":"verified","to":"archived","reason":"Archived out of active backlog","timestamp_ms":1793289329178}
 {"event":"status_changed","task_id":"ef953fb4-3549-4625-8715-29b77a7a9047","from":"verified","to":"archived","reason":"Archived out of active backlog","timestamp_ms":1793289336836}
+{"event":"status_changed","task_id":"7746212c-f286-4a2e-a8f0-c61c1a6ff6d3","from":"ready","to":"archived","reason":"Archived out of active backlog","timestamp_ms":1793953202722}
