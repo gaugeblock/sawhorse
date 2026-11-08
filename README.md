@@ -114,7 +114,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 `sawhorse` adheres strictly to the canonical 9-Document Architecture:
 * **[`README.md`](./README.md):** Public elevator pitch, CLI reference, and 3-mode overview.
-* **[`CONTRIBUTING.md`](docs/CONTRIBUTING.md):** Developer environment setup, Rust 2024 toolchain, and test execution.
+* **[`CONTRIBUTING.md`](CONTRIBUTING.md):** Developer environment setup, Rust 2024 toolchain, and test execution.
 * **[`PRODUCT.md`](docs/PRODUCT.md):** User personas, JTBD, runtime flexibility metrics, and problem statements.
 * **[`ARCHITECTURE.md`](docs/ARCHITECTURE.md):** Subsystem topologies, provider adapter pipelines, and crate boundaries.
 * **[`SPEC.md`](docs/SPEC.md):** Formal inference invariants, fallback state machines, and type contracts.
