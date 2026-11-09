@@ -1,0 +1,209 @@
+{
+  "ticket": {
+    "id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+    "ticket_key": "GB-214",
+    "slug": "provider-returns-intermittent-500-empty-response-and-sawhorse-blames-max-tokens-9a301c",
+    "title": "Provider returns intermittent 500 empty response and sawhorse blames max_tokens",
+    "description": "RESOLVED. The gateway non-streaming response assembly returns 500 \"empty response content\" for request bodies that stream correctly.\n\nPROOF: the captured body /tmp/gbdump/universal-1793363254390.json returns 500 with `stream: false` and 200 with streamed content for `stream: true` - same bytes, same model, back to back.\n\nFIX: sawhorse complete() retries a 500 whose body says `empty response content` once through the streaming path and re-assembles the text (7ffb3dc). Verified end to end: joiner fill --verify-crate now logs \"recovered empty non-streamed content by streaming\", returns tier gold with attempts 2, and writes the first Gold record to .gaugeblock/spool/outbox.jsonl (outbox 26, gold 1, typecheck_passed true, rejected_attempt carrying real code).\n\nSIX HYPOTHESES WERE REFUTED BY MEASUREMENT FIRST, and each had cost real work before this: max_tokens 4096 vs 32768 fail identically; reasoning_effort none/low/medium/high/max all answer 200 on a plain prompt; dropping each of the three reasoning keys (reasoning{effort}, reasoning_effort, thinking{type:enabled}) still fails; thinking enabled or absent makes no difference; the temperature float32 artifact (0.20000000298023224) is irrelevant; structured output answers 200. Every individual piece of the failing user message answers 200 and only the combination fails - which is consistent with response-side assembly, not request content.\n\nINSTRUMENT ADDED FOR THIS: SAWHORSE_DUMP_REQUEST=<file|dir> captures outbound bodies (9e26139), which is what made the reproduction possible after six failed guesses from the outside.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "sawhorse-core",
+      "module_path": null,
+      "target_files": [
+        "sawhorse/crates/sawhorse-core/src/providers/openai_compat/payload.rs",
+        "sawhorse/crates/sawhorse-core/src/router.rs"
+      ],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "discovered_from",
+        "target_id": "dbb69e48-289e-4ef9-910d-95e9cd76c32c"
+      },
+      {
+        "kind": "related_to",
+        "target_id": "c5c947ba-bb30-491d-9de6-2f08a3d74d2c",
+        "target_ticket_key": "GB-206"
+      },
+      {
+        "kind": "related_to",
+        "target_id": "fd096035-84f9-45a2-9562-5b4112406305",
+        "target_ticket_key": "GB-212"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [
+      "A captured body reproduces the 500 and the same body passes after the fix",
+      "The trigger is named and the fix is verified on a live Gold fill",
+      "joiner fill --verify-crate returns tier gold end to end"
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "manual",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Root cause: the gateway non-streaming path returns 500 empty response content for bodies that stream fine - the captured body gives 500 with stream:false and 200 with stream:true. Fixed in sawhorse complete() by retrying such a 500 once through the streaming path (7ffb3dc). Verified end to end: joiner fill --verify-crate reports tier gold, attempts 2, and writes the first Gold record to the spool (outbox 26, gold 1, typecheck_passed true). Six alternative hypotheses were refuted by measurement before this (max_tokens 4096 vs 32768, all reasoning efforts, each reasoning key dropped, thinking on/off, temperature artifact, structured output), and SAWHORSE_DUMP_REQUEST was added so bodies can be reproduced instead of guessed at.",
+      "verified_at_epoch_ms": 1793364492595,
+      "git_branch": "main",
+      "base_commit_sha": "7ffb3dce6da51c2afcd73266a4894c2ba333fa09",
+      "head_commit_sha": "7ffb3dce6da51c2afcd73266a4894c2ba333fa09",
+      "commit_shas": [
+        "7ffb3dce6da51c2afcd73266a4894c2ba333fa09"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793360258911,
+    "updated_at_epoch_ms": 1794038018423,
+    "archived_at_epoch_ms": 1794038018423
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+        "ticket_key": "GB-214",
+        "slug": "provider-returns-intermittent-500-empty-response-and-sawhorse-blames-max-tokens-9a301c",
+        "title": "Provider returns intermittent 500 empty response and sawhorse blames max_tokens",
+        "description": "Measured, five calls each, same model and key: a structured joiner-style prompt (system message, file context, fenced code) failed 3 of 5 with HTTP 500 empty response content, while a short plain prompt failed 0 of 5. So the failure is intermittent and prompt-shape related, not a token budget problem - but sawhorse appends a diagnostic that asserts reasoning models exhausted max_tokens, which is a guess presented as a cause. That guess cost two wrong fixes before it was tested: GB-206 raised the budget 1024 to 8192, and GB-212 disabled the reasoning trace; neither addressed the flake, though both are defensible on their own terms. Two changes are needed: a bounded retry in the router for an empty-content 500 (transient), and a diagnostic that states what was observed and ranks likely causes instead of naming one. A single-sample bisect of this cost me a wrong conclusion about code fences, which is worth remembering as a measurement discipline point.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "sawhorse-core",
+          "module_path": null,
+          "target_files": [
+            "sawhorse/crates/sawhorse-core/src/providers/openai_compat/payload.rs",
+            "sawhorse/crates/sawhorse-core/src/router.rs"
+          ],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [
+          {
+            "kind": "discovered_from",
+            "target_id": "dbb69e48-289e-4ef9-910d-95e9cd76c32c"
+          }
+        ],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793360258911,
+        "updated_at_epoch_ms": 1793360258911
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": "dbb69e48-289e-4ef9-910d-95e9cd76c32c"
+    },
+    {
+      "event": "edge_added",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "edge": {
+        "kind": "related_to",
+        "target_id": "c5c947ba-bb30-491d-9de6-2f08a3d74d2c",
+        "target_ticket_key": "GB-206"
+      },
+      "timestamp_ms": 1793360270673
+    },
+    {
+      "event": "edge_added",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "edge": {
+        "kind": "related_to",
+        "target_id": "fd096035-84f9-45a2-9562-5b4112406305",
+        "target_ticket_key": "GB-212"
+      },
+      "timestamp_ms": 1793360270756
+    },
+    {
+      "event": "task_updated",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "title": null,
+      "description": "Provider returns a 500 \"empty response content\" for some prompts, and sawhorse used to blame max_tokens.\n\nREPRODUCED (deterministic). `SAWHORSE_DUMP_REQUEST=/tmp/gbdump joiner fill /tmp/gb-gold-crate/src/lib.rs --symbol grapheme_count --max-tokens 4096` captures a 753-byte body that fails 5/5 on replay via curl. That capture is now the fixture for all further bisection.\n\nREFUTED, each by measurement on the same model (cline-pass/deepseek-v4.1-flash-1017):\n- max_tokens exhaustion: 4096 and 32768 fail identically; the prompt is ~260 tokens against a 1M window.\n- reasoning trace eating the budget: reasoning_effort=none with max_tokens=4096 still fails.\n- the triple reasoning encoding (reasoning{effort} + reasoning_effort + thinking{type:enabled}): dropping each key individually still fails.\n- temperature float32 artifact (0.20000000298023224): fails identically at 0.2.\n- structured output: json_object and json_schema answer 200.\n- all six reasoning effort values: 200 with a plain prompt.\n- fenced-only response being eaten by an artifact extractor: asking for a pure fence answers 200 twice.\n- prompt length: every individual piece of the failing user message answers 200 (intent / fenced current code / diagnostics / fence request).\n\nCONFIRMED: only the COMBINATION of those pieces fails. Same model, same system message, pieces alone 200, together 500. Splitting into separate user turns still fails.\n\nNEXT: bisect the response side. \"empty response content\" is a content-extraction error, and stream:true takes a different code path through the gateway, so replay the captured body with streaming before touching prompt wording. Then binary-search which two pieces interact.\n\nCost of the previous misdiagnosis: GB-206/GB-212 raised the budget twice and disabled reasoning on the strength of a message that asserted a cause it had not measured. The diagnostic now reports the observation and ranks causes (GB-215).",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "A captured body from /tmp/gbdump reproduces the 500 and the same body passes after the fix",
+        "The trigger is named as a specific pair of prompt elements, or the streaming path is proven to bypass it"
+      ],
+      "timestamp_ms": 1793363834303
+    },
+    {
+      "event": "task_updated",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "title": null,
+      "description": "RESOLVED. The gateway non-streaming response assembly returns 500 \"empty response content\" for request bodies that stream correctly.\n\nPROOF: the captured body /tmp/gbdump/universal-1793363254390.json returns 500 with `stream: false` and 200 with streamed content for `stream: true` - same bytes, same model, back to back.\n\nFIX: sawhorse complete() retries a 500 whose body says `empty response content` once through the streaming path and re-assembles the text (7ffb3dc). Verified end to end: joiner fill --verify-crate now logs \"recovered empty non-streamed content by streaming\", returns tier gold with attempts 2, and writes the first Gold record to .gaugeblock/spool/outbox.jsonl (outbox 26, gold 1, typecheck_passed true, rejected_attempt carrying real code).\n\nSIX HYPOTHESES WERE REFUTED BY MEASUREMENT FIRST, and each had cost real work before this: max_tokens 4096 vs 32768 fail identically; reasoning_effort none/low/medium/high/max all answer 200 on a plain prompt; dropping each of the three reasoning keys (reasoning{effort}, reasoning_effort, thinking{type:enabled}) still fails; thinking enabled or absent makes no difference; the temperature float32 artifact (0.20000000298023224) is irrelevant; structured output answers 200. Every individual piece of the failing user message answers 200 and only the combination fails - which is consistent with response-side assembly, not request content.\n\nINSTRUMENT ADDED FOR THIS: SAWHORSE_DUMP_REQUEST=<file|dir> captures outbound bodies (9e26139), which is what made the reproduction possible after six failed guesses from the outside.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "A captured body reproduces the 500 and the same body passes after the fix",
+        "The trigger is named and the fix is verified on a live Gold fill",
+        "joiner fill --verify-crate returns tier gold end to end"
+      ],
+      "timestamp_ms": 1793364486490
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793364492330,
+        "lease_expires_at_epoch_ms": 1793368092330,
+        "git_branch": "fix/gb-214-stream-fallback",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793364492330
+    },
+    {
+      "event": "task_verified",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "receipt": {
+        "verifier": "manual",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Root cause: the gateway non-streaming path returns 500 empty response content for bodies that stream fine - the captured body gives 500 with stream:false and 200 with stream:true. Fixed in sawhorse complete() by retrying such a 500 once through the streaming path (7ffb3dc). Verified end to end: joiner fill --verify-crate reports tier gold, attempts 2, and writes the first Gold record to the spool (outbox 26, gold 1, typecheck_passed true). Six alternative hypotheses were refuted by measurement before this (max_tokens 4096 vs 32768, all reasoning efforts, each reasoning key dropped, thinking on/off, temperature artifact, structured output), and SAWHORSE_DUMP_REQUEST was added so bodies can be reproduced instead of guessed at.",
+        "verified_at_epoch_ms": 1793364492595,
+        "git_branch": "main",
+        "base_commit_sha": "7ffb3dce6da51c2afcd73266a4894c2ba333fa09",
+        "head_commit_sha": "7ffb3dce6da51c2afcd73266a4894c2ba333fa09",
+        "commit_shas": [
+          "7ffb3dce6da51c2afcd73266a4894c2ba333fa09"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953209690
+    },
+    {
+      "event": "task_archived",
+      "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
+      "status": "verified",
+      "timestamp_ms": 1794038018423
+    }
+  ]
+}

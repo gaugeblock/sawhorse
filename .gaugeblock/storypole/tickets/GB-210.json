@@ -1,0 +1,181 @@
+{
+  "ticket": {
+    "id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+    "ticket_key": "GB-210",
+    "slug": "discover-models-from-the-provider-catalogue-instead-of-assuming-a-fixed-set-5ef64a",
+    "title": "Discover models from the provider catalogue instead of assuming a fixed set",
+    "description": "The owner wants cline-pass/deepseek-v4.1-flash-1017 and asked whether model selection must stay static. It must not, but the first design was wrong in an important way. Discovery: the OpenAI-compatible provider already calls GET {base_url}/models in health_check and discards the body, and the live catalogue answers 200 with 439 ids in OpenAI shape, so the path the VS Code extension uses is reachable today. Constraint the owner corrected: ClinePass is a CURATED SET of fifteen documented ids, not a namespace, so prefixing an arbitrary catalogue id does not make it pass-eligible and a deprecated id (GLM-5.2, Kimi K2.6, Kimi K2.7 Code, DeepSeek V4 Flash) stops working even though it may still be documented or cached. Verified against the live endpoint: cline-pass/deepseek-v4.1-flash-1017 returns 200 at gateway cost 0 while the catalogue id deepseek/deepseek-v4.1-flash-1017 returns 402 insufficient_credits, so the catalogue describes what exists and says nothing about entitlement. Consequences for the implementation: the command must label ids as pass-eligible from a dated allowlist sourced from https://docs.cline.bot/getting-started/clinepass (refreshed by script, never inferred), must not suggest that prefixing works generally, and should grow an account-level probe that makes a minimal request so eligibility is verified rather than assumed.",
+    "kind": "feature",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": null,
+      "crate_name": "sawhorse-core",
+      "module_path": null,
+      "target_files": [
+        "sawhorse/crates/sawhorse-core/src/traits.rs",
+        "sawhorse/crates/sawhorse-core/src/providers/openai_compat/models.rs",
+        "sawhorse/crates/sawhorse-cli/src/commands/models.rs"
+      ],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "The pass set is refreshed by a script that diffs the docs markdown form (docs.cline.bot/getting-started/clinepass.md), not by editing a const by hand",
+      "sawhorse models --probe verifies the configured id with one minimal request, so a deprecated or unbillable id is reported as such rather than as a generic error"
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cargo-nextest+dogfood",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "catalogue discovery via GET /models (439 ids) plus a curated pass set as dated data; clippy/fmt/tests green with 6 new tests; live dogfood shows configured cline-pass/deepseek-v4.1-flash-1017 as pass-eligible while the catalogue does not advertise it; direct calls proved alias 200 at gateway cost 0 versus catalogue id 402 insufficient_credits; refresh script and probe recorded as criteria",
+      "verified_at_epoch_ms": 1793337131616,
+      "git_branch": "main",
+      "base_commit_sha": "b82d9314ba8a8a5c109b0459067daabd43f8a34a",
+      "head_commit_sha": "b82d9314ba8a8a5c109b0459067daabd43f8a34a",
+      "commit_shas": [
+        "b82d9314ba8a8a5c109b0459067daabd43f8a34a"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793335507109,
+    "updated_at_epoch_ms": 1794038004445,
+    "archived_at_epoch_ms": 1794038004445
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+        "ticket_key": "GB-210",
+        "slug": "discover-models-from-the-provider-catalogue-instead-of-assuming-a-fixed-set-5ef64a",
+        "title": "Discover models from the provider catalogue instead of assuming a fixed set",
+        "description": "The owner wants cline-pass/deepseek-v4.1-flash-1017 and asked whether model selection must stay static. It does not: the OpenAI-compatible provider already calls GET {base_url}/models in health_check and discards the body, and the live Cline catalogue answers 200 with 439 ids in OpenAI shape. So the path the VS Code extension uses is reachable from sawhorse today. Scope: a list_models method on the provider trait (default empty for embedded providers), a tolerant parser for the catalogue payload, implementation for openai_compat, and a sawhorse models command that prints what each provider advertises, marks the configured model, and flags when the configured id is not in the catalogue - which is exactly the cline-pass alias case, since the catalogue exposes deepseek/deepseek-v4.1-flash-1017 and zero cline-pass/ entries.",
+        "kind": "feature",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": null,
+          "crate_name": "sawhorse-core",
+          "module_path": null,
+          "target_files": [
+            "sawhorse/crates/sawhorse-core/src/traits.rs",
+            "sawhorse/crates/sawhorse-core/src/providers/openai_compat/models.rs",
+            "sawhorse/crates/sawhorse-cli/src/commands/models.rs"
+          ],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "sawhorse models lists every advertised id per OpenAI-compatible provider and exits zero",
+          "The configured model is marked, and a configured id absent from the catalogue is called out rather than hidden",
+          "Payload parsing is unit tested against OpenAI, wrapped and malformed bodies",
+          "Embedded providers report an empty list rather than failing"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793335507109,
+        "updated_at_epoch_ms": 1793335507109
+      }
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793335517457,
+        "lease_expires_at_epoch_ms": 1793339117457,
+        "git_branch": "feat/gb-210-dynamic-model-discovery",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793335517457
+    },
+    {
+      "event": "task_updated",
+      "task_id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+      "title": null,
+      "description": "The owner wants cline-pass/deepseek-v4.1-flash-1017 and asked whether model selection must stay static. It must not, but the first design was wrong in an important way. Discovery: the OpenAI-compatible provider already calls GET {base_url}/models in health_check and discards the body, and the live catalogue answers 200 with 439 ids in OpenAI shape, so the path the VS Code extension uses is reachable today. Constraint the owner corrected: ClinePass is a CURATED SET of fifteen documented ids, not a namespace, so prefixing an arbitrary catalogue id does not make it pass-eligible and a deprecated id (GLM-5.2, Kimi K2.6, Kimi K2.7 Code, DeepSeek V4 Flash) stops working even though it may still be documented or cached. Verified against the live endpoint: cline-pass/deepseek-v4.1-flash-1017 returns 200 at gateway cost 0 while the catalogue id deepseek/deepseek-v4.1-flash-1017 returns 402 insufficient_credits, so the catalogue describes what exists and says nothing about entitlement. Consequences for the implementation: the command must label ids as pass-eligible from a dated allowlist sourced from https://docs.cline.bot/getting-started/clinepass (refreshed by script, never inferred), must not suggest that prefixing works generally, and should grow an account-level probe that makes a minimal request so eligibility is verified rather than assumed.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1793336521201
+    },
+    {
+      "event": "task_updated",
+      "task_id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "unused-deps"
+      ],
+      "timestamp_ms": 1793336831144
+    },
+    {
+      "event": "task_updated",
+      "task_id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "The pass set is refreshed by a script that diffs the docs markdown form (docs.cline.bot/getting-started/clinepass.md), not by editing a const by hand",
+        "sawhorse models --probe verifies the configured id with one minimal request, so a deprecated or unbillable id is reported as such rather than as a generic error"
+      ],
+      "timestamp_ms": 1793336843386
+    },
+    {
+      "event": "task_verified",
+      "task_id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+      "receipt": {
+        "verifier": "cargo-nextest+dogfood",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "catalogue discovery via GET /models (439 ids) plus a curated pass set as dated data; clippy/fmt/tests green with 6 new tests; live dogfood shows configured cline-pass/deepseek-v4.1-flash-1017 as pass-eligible while the catalogue does not advertise it; direct calls proved alias 200 at gateway cost 0 versus catalogue id 402 insufficient_credits; refresh script and probe recorded as criteria",
+        "verified_at_epoch_ms": 1793337131616,
+        "git_branch": "main",
+        "base_commit_sha": "b82d9314ba8a8a5c109b0459067daabd43f8a34a",
+        "head_commit_sha": "b82d9314ba8a8a5c109b0459067daabd43f8a34a",
+        "commit_shas": [
+          "b82d9314ba8a8a5c109b0459067daabd43f8a34a"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953199352
+    },
+    {
+      "event": "task_archived",
+      "task_id": "5ef64a6a-75fe-4045-8027-a19a97bad6c3",
+      "status": "verified",
+      "timestamp_ms": 1794038004445
+    }
+  ]
+}
