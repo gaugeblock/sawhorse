@@ -10,7 +10,7 @@
 //! inference failed".
 
 use gaugeblock_contracts::{SpanStatus, TelemetrySpan};
-use gaugeblock_workspace::{GaugeblockPaths, append_span, now_ms};
+use gaugeblock_workspace::{append_span, now_ms};
 use uuid::Uuid;
 
 /// Trace id of the run this process belongs to, set by the parent so child spans join it.
@@ -28,12 +28,15 @@ pub fn record_completion(started_at_ms: u64, outcome: Result<(), &str>) {
     let Ok(cwd) = std::env::current_dir() else {
         return;
     };
-    let Ok(paths) = GaugeblockPaths::discover(&cwd) else {
+    // The sink follows the declared suite, not the working directory (`GB-338`). Telemetry is derived and
+    // untracked, so it centralises at the suite root; reading it from the member that happened to run the command
+    // is what left a panel tailing the root with nothing to show.
+    let Some(path) = gaugeblock_workspace::sink_path(&cwd) else {
         return;
     };
 
     let span = completion_span(trace_id_from_env(), started_at_ms, now_ms(), outcome);
-    let _ = append_span(&paths.telemetry_events(), &span);
+    let _ = append_span(&path, &span);
 }
 
 /// The trace id this process shares with its parent, or a fresh one when it is running alone.
