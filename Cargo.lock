@@ -1948,6 +1948,7 @@ dependencies = [
  "anyhow",
  "clap",
  "futures-util",
+ "gaugeblock-workspace",
  "sawhorse-core",
  "serde_json",
  "tokio",

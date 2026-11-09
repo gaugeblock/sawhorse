@@ -153,50 +153,64 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::EnvFilter::new(log_level))
         .init();
 
-    if let Commands::Init { path, force } = &cli.command {
-        return run_init(path, *force);
-    }
+    // One span per invocation (`GB-339`). Opened once logging is configured so that everything below - the two
+    // config-loading `?` calls and the early `return` for `init` - happens inside the span window. An early return
+    // leaves a span unfinished just as surely as `?` does, and it does not read as error handling, so it has to sit
+    // in the block rather than beside it.
+    let command = std::env::args().nth(1).filter(|arg| !arg.starts_with('-'));
+    let invocation = gaugeblock_workspace::InvocationSpan::start("sawhorse", command.as_deref());
 
-    let config = if let Some(ref path) = cli.config {
-        SawhorseConfig::load_from_path(path)?
-    } else {
-        SawhorseConfig::discover()?
-    };
+    let result = async {
+        if let Commands::Init { path, force } = &cli.command {
+            return run_init(path, *force);
+        }
 
-    match cli.command {
-        Commands::Init { .. } => unreachable!(),
-        Commands::Ping { provider, json } => run_ping(config, provider, json).await,
-        Commands::Models {
-            provider,
-            filter,
-            json,
-        } => run_models(config, provider, filter, json).await,
-        Commands::Complete {
-            prompt,
-            role,
-            provider,
-            grammar,
-            grammar_format,
-            system,
-            max_tokens,
-            temperature,
-            stream,
-            json,
-        } => {
-            let args = CompleteArgs {
+        let config = if let Some(ref path) = cli.config {
+            SawhorseConfig::load_from_path(path)?
+        } else {
+            SawhorseConfig::discover()?
+        };
+
+        match cli.command {
+            Commands::Init { .. } => unreachable!(),
+            Commands::Ping { provider, json } => run_ping(config, provider, json).await,
+            Commands::Models {
+                provider,
+                filter,
+                json,
+            } => run_models(config, provider, filter, json).await,
+            Commands::Complete {
                 prompt,
-                role: role.into(),
+                role,
                 provider,
                 grammar,
-                grammar_format: Some(grammar_format.into()),
-                system_prompt: system,
+                grammar_format,
+                system,
                 max_tokens,
                 temperature,
                 stream,
-                as_json: json,
-            };
-            run_complete(config, args).await
+                json,
+            } => {
+                let args = CompleteArgs {
+                    prompt,
+                    role: role.into(),
+                    provider,
+                    grammar,
+                    grammar_format: Some(grammar_format.into()),
+                    system_prompt: system,
+                    max_tokens,
+                    temperature,
+                    stream,
+                    as_json: json,
+                };
+                run_complete(config, args).await
+            }
+            Commands::Bench { prompt, json } => run_bench(config, prompt, json).await,
         }
-        Commands::Bench { prompt, json } => run_bench(config, prompt, json).await,
     }
+    .await;
+
+    // Status follows the result the caller sees, so the span cannot disagree with the exit code.
+    invocation.finish(result.is_ok());
+    result
 }
