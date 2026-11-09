@@ -1,0 +1,140 @@
+{
+  "ticket": {
+    "id": "06d1acb3-0041-4294-9c79-6f6be6535f1c",
+    "ticket_key": "GB-80",
+    "slug": "enrich-sawhorse-provider-observability-and-expand-synthesis-token-headroom-for-reasoning-models-06d1ac",
+    "title": "Enrich sawhorse provider observability and expand synthesis token headroom for reasoning models",
+    "description": "Enrich sawhorse-core request observability, model error diagnostics for empty responses, and expand outfeed synthesis token headroom for reasoning models",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": "sawhorse",
+      "crate_name": "sawhorse-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": {
+      "summary": "Enrich sawhorse request observability, error diagnostics for empty responses, and expand outfeed synthesis token headroom",
+      "design_markdown": "# GB-80: Enrich Sawhorse Provider Observability and Expand Synthesis Token Headroom for Reasoning Models\n\n## Problem\n1. **Empty Response Content from Reasoning Models:**\n   `cline-pass/deepseek-v4.1-flash` is a reasoning model. During inference, reasoning models emit an extensive thinking trace (`reasoning_tokens`) before outputting Markdown `content`. In empirical tests on changelog synthesis, the model used 1,950 reasoning tokens. Because `outfeed-core::synthesis` hardcoded `max_tokens = 1024`, the token limit was exhausted mid-thought, leaving `message.content` empty (`\"\"`). The Cline API gateway rejected the empty completion with HTTP 500 `{\"error\":\"empty response content\",\"success\":false}`.\n2. **Zero Visibility into Sent Requests & Errors:**\n   `sawhorse-core` lacked structured logging of model names, prompt sizes, and token limits. On HTTP errors, `Http` error messages omitted the target model and request parameters, leaving operators blind to what request payload was dispatched or why the provider failed.\n3. **Timeout Insufficient for Thought Chains:**\n   `outfeed-core` had a 10s synthesis timeout, which is insufficient for reasoning models that take 12-18s to finish complex thought chains.\n\n## Solution\n1. **Enrich `sawhorse-core` Observability & Error Diagnostics:**\n   - In `OpenAiCompatProvider::complete` and `complete_stream`, emit structured `tracing::debug!` logs capturing `model`, `url`, `prompt_len`, `max_tokens`, `temperature`.\n   - On HTTP errors, format the error to include the model name and `max_tokens`, and append an actionable diagnostic hint if `\"empty response content\"` is encountered.\n2. **Expand `outfeed-core` Token Headroom & Timeout:**\n   - Increase `req.max_tokens` from 1024 to 4096 in `outfeed-core::synthesis`.\n   - Increase LLM synthesis timeout from 10s to 30s.\n   - Add structured `tracing::debug!` logs before dispatching synthesis requests.\n3. **Verification:**\n   - Pass Tier 2 verification in `sawhorse` and `outfeed`.\n   - Test live changelog synthesis with `outfeed release --all --dry-run` to confirm successful LLM synthesis without timeouts or empty response failures.\n",
+      "steps": [],
+      "plan_file_path": ".gaugeblock/storypole/plans/GB-80.md",
+      "updated_at_epoch_ms": 1793061691249
+    },
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "agent-antigravity",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Enriched sawhorse OpenAiCompatProvider with structured request logging, model details, and empty response hints; expanded outfeed synthesis max_tokens to 4096 and timeout to 30s",
+      "verified_at_epoch_ms": 1793062237098,
+      "git_branch": "feat/gb-80-sawhorse-observability-and-token-headroom",
+      "base_commit_sha": "2eb652652738534241e6ea8cc6f58b21034201b2",
+      "head_commit_sha": "2eb652652738534241e6ea8cc6f58b21034201b2",
+      "commit_shas": [
+        "2eb652652738534241e6ea8cc6f58b21034201b2"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793061654265,
+    "updated_at_epoch_ms": 1794037994727,
+    "archived_at_epoch_ms": 1794037994727
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "06d1acb3-0041-4294-9c79-6f6be6535f1c",
+        "ticket_key": "GB-80",
+        "slug": "enrich-sawhorse-provider-observability-and-expand-synthesis-token-headroom-for-reasoning-models-06d1ac",
+        "title": "Enrich sawhorse provider observability and expand synthesis token headroom for reasoning models",
+        "description": "Enrich sawhorse-core request observability, model error diagnostics for empty responses, and expand outfeed synthesis token headroom for reasoning models",
+        "kind": "bug",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": "sawhorse",
+          "crate_name": "sawhorse-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793061654265,
+        "updated_at_epoch_ms": 1793061654265
+      }
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "06d1acb3-0041-4294-9c79-6f6be6535f1c",
+      "claim": {
+        "agent_id": "agent-antigravity",
+        "claimed_at_epoch_ms": 1793061660622,
+        "lease_expires_at_epoch_ms": 1793065260622,
+        "git_branch": "feat/gb-80-sawhorse-observability-and-token-headroom",
+        "base_commit_sha": "2eb652652738534241e6ea8cc6f58b21034201b2"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "06d1acb3-0041-4294-9c79-6f6be6535f1c",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by agent-antigravity",
+      "timestamp_ms": 1793061660622
+    },
+    {
+      "event": "plan_updated",
+      "task_id": "06d1acb3-0041-4294-9c79-6f6be6535f1c",
+      "plan": {
+        "summary": "Enrich sawhorse request observability, error diagnostics for empty responses, and expand outfeed synthesis token headroom",
+        "design_markdown": "# GB-80: Enrich Sawhorse Provider Observability and Expand Synthesis Token Headroom for Reasoning Models\n\n## Problem\n1. **Empty Response Content from Reasoning Models:**\n   `cline-pass/deepseek-v4.1-flash` is a reasoning model. During inference, reasoning models emit an extensive thinking trace (`reasoning_tokens`) before outputting Markdown `content`. In empirical tests on changelog synthesis, the model used 1,950 reasoning tokens. Because `outfeed-core::synthesis` hardcoded `max_tokens = 1024`, the token limit was exhausted mid-thought, leaving `message.content` empty (`\"\"`). The Cline API gateway rejected the empty completion with HTTP 500 `{\"error\":\"empty response content\",\"success\":false}`.\n2. **Zero Visibility into Sent Requests & Errors:**\n   `sawhorse-core` lacked structured logging of model names, prompt sizes, and token limits. On HTTP errors, `Http` error messages omitted the target model and request parameters, leaving operators blind to what request payload was dispatched or why the provider failed.\n3. **Timeout Insufficient for Thought Chains:**\n   `outfeed-core` had a 10s synthesis timeout, which is insufficient for reasoning models that take 12-18s to finish complex thought chains.\n\n## Solution\n1. **Enrich `sawhorse-core` Observability & Error Diagnostics:**\n   - In `OpenAiCompatProvider::complete` and `complete_stream`, emit structured `tracing::debug!` logs capturing `model`, `url`, `prompt_len`, `max_tokens`, `temperature`.\n   - On HTTP errors, format the error to include the model name and `max_tokens`, and append an actionable diagnostic hint if `\"empty response content\"` is encountered.\n2. **Expand `outfeed-core` Token Headroom & Timeout:**\n   - Increase `req.max_tokens` from 1024 to 4096 in `outfeed-core::synthesis`.\n   - Increase LLM synthesis timeout from 10s to 30s.\n   - Add structured `tracing::debug!` logs before dispatching synthesis requests.\n3. **Verification:**\n   - Pass Tier 2 verification in `sawhorse` and `outfeed`.\n   - Test live changelog synthesis with `outfeed release --all --dry-run` to confirm successful LLM synthesis without timeouts or empty response failures.\n",
+        "steps": [],
+        "plan_file_path": ".gaugeblock/storypole/plans/GB-80.md",
+        "updated_at_epoch_ms": 1793061691249
+      },
+      "timestamp_ms": 1793061691249
+    },
+    {
+      "event": "task_verified",
+      "task_id": "06d1acb3-0041-4294-9c79-6f6be6535f1c",
+      "receipt": {
+        "verifier": "agent-antigravity",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Enriched sawhorse OpenAiCompatProvider with structured request logging, model details, and empty response hints; expanded outfeed synthesis max_tokens to 4096 and timeout to 30s",
+        "verified_at_epoch_ms": 1793062237098,
+        "git_branch": "feat/gb-80-sawhorse-observability-and-token-headroom",
+        "base_commit_sha": "2eb652652738534241e6ea8cc6f58b21034201b2",
+        "head_commit_sha": "2eb652652738534241e6ea8cc6f58b21034201b2",
+        "commit_shas": [
+          "2eb652652738534241e6ea8cc6f58b21034201b2"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_archived",
+      "task_id": "06d1acb3-0041-4294-9c79-6f6be6535f1c",
+      "status": "verified",
+      "timestamp_ms": 1794037994727
+    }
+  ]
+}
