@@ -1,0 +1,81 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1792729483882,
+        "decisions": [],
+        "description": "reqwest 0.13 introduces rustls with aws-lc-rs/aws-lc-sys by default, requiring cmake and adding significant build time on clean checkouts. Benchmark ring vs native-tls vs aws-lc-rs before moving across sawhorse, benchwork, and rabbet.",
+        "edges": [],
+        "id": "75299931-ae54-4d9e-b1da-f46e0a401868",
+        "kind": "feature",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "sawhorse-core",
+          "labels": [
+            "deps,reqwest,network"
+          ],
+          "module_path": null,
+          "repo": "sawhorse",
+          "target_files": [],
+          "target_symbols": [
+            "sawhorse::core::providers,benchwork::cli::daemon,rabbet::core::publish"
+          ]
+        },
+        "slug": "evaluate-reqwest-0-13-and-tower-http-0-7-adoption-and-aws-lc-sys-build-overhead-752999",
+        "status": "deferred",
+        "ticket_key": "SH-1",
+        "title": "Evaluate reqwest 0.13 and tower-http 0.7 adoption and aws-lc-sys build overhead",
+        "updated_at_epoch_ms": 1792729483882,
+        "verification_receipt": null
+      }
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "Evaluated 2026-10-28: reqwest 0.13.5 and tower-http 0.7.1 are available (sawhorse/benchwork/rabbet pin reqwest 0.12; joiner/benchwork/rabbet pin tower-http 0.6). Adoption is gated on measuring aws-lc-sys build overhead against the current rustls-tls feature set before switching.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "75299931-ae54-4d9e-b1da-f46e0a401868",
+      "timestamp_ms": 1793176861591,
+      "title": null
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "created_at_epoch_ms": 1792729483882,
+    "decisions": [],
+    "description": "Evaluated 2026-10-28: reqwest 0.13.5 and tower-http 0.7.1 are available (sawhorse/benchwork/rabbet pin reqwest 0.12; joiner/benchwork/rabbet pin tower-http 0.6). Adoption is gated on measuring aws-lc-sys build overhead against the current rustls-tls feature set before switching.",
+    "edges": [],
+    "id": "75299931-ae54-4d9e-b1da-f46e0a401868",
+    "kind": "feature",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "sawhorse-core",
+      "labels": [
+        "deps,reqwest,network"
+      ],
+      "module_path": null,
+      "repo": "sawhorse",
+      "target_files": [],
+      "target_symbols": [
+        "sawhorse::core::providers,benchwork::cli::daemon,rabbet::core::publish"
+      ]
+    },
+    "slug": "evaluate-reqwest-0-13-and-tower-http-0-7-adoption-and-aws-lc-sys-build-overhead-752999",
+    "status": "deferred",
+    "ticket_key": "SH-1",
+    "title": "Evaluate reqwest 0.13 and tower-http 0.7 adoption and aws-lc-sys build overhead",
+    "updated_at_epoch_ms": 1793176861591,
+    "verification_receipt": null
+  }
+}

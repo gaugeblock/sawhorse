@@ -1,0 +1,111 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [
+          "Tier 4 cross-repo verification passes",
+          "Manifest version bumped to 0.1.0-beta.3",
+          "Annotated git tag created"
+        ],
+        "active_claim": null,
+        "created_at_epoch_ms": 1792995065989,
+        "decisions": [],
+        "description": "Automated release ticket for sawhorse v0.1.0-beta.3.\n\nRationale: Fixes/refactors; incrementing beta pre-release\nShipped Tasks: GB-45, SH-2",
+        "edges": [],
+        "id": "7746212c-f286-4a2e-a8f0-c61c1a6ff6d3",
+        "kind": "refactor",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 1,
+        "scope": {
+          "crate_name": "sawhorse-core",
+          "labels": [
+            "release"
+          ],
+          "module_path": null,
+          "repo": "sawhorse",
+          "target_files": [],
+          "target_symbols": []
+        },
+        "slug": "chore-release-release-sawhorse-v0-1-0-beta-3-774621",
+        "status": "ready",
+        "ticket_key": "SH-3",
+        "title": "chore(release): release sawhorse v0.1.0-beta.3",
+        "updated_at_epoch_ms": 1792995065989,
+        "verification_receipt": null
+      }
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": null,
+        "chain_key": null,
+        "command": "outfeed apply",
+        "commit_shas": [],
+        "diagnostic_count": 0,
+        "exit_code": 0,
+        "git_branch": null,
+        "head_commit_sha": null,
+        "repo": null,
+        "summary": "Release v0.1.0-beta.3 successfully certified and tagged",
+        "verified_at_epoch_ms": 1792995066016,
+        "verifier": "outfeed"
+      },
+      "task_id": "7746212c-f286-4a2e-a8f0-c61c1a6ff6d3"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "7746212c-f286-4a2e-a8f0-c61c1a6ff6d3",
+      "timestamp_ms": 1794037962747
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [
+      "Tier 4 cross-repo verification passes",
+      "Manifest version bumped to 0.1.0-beta.3",
+      "Annotated git tag created"
+    ],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794037962747,
+    "created_at_epoch_ms": 1792995065989,
+    "decisions": [],
+    "description": "Automated release ticket for sawhorse v0.1.0-beta.3.\n\nRationale: Fixes/refactors; incrementing beta pre-release\nShipped Tasks: GB-45, SH-2",
+    "edges": [],
+    "id": "7746212c-f286-4a2e-a8f0-c61c1a6ff6d3",
+    "kind": "refactor",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 1,
+    "scope": {
+      "crate_name": "sawhorse-core",
+      "labels": [
+        "release"
+      ],
+      "module_path": null,
+      "repo": "sawhorse",
+      "target_files": [],
+      "target_symbols": []
+    },
+    "slug": "chore-release-release-sawhorse-v0-1-0-beta-3-774621",
+    "status": "verified",
+    "ticket_key": "SH-3",
+    "title": "chore(release): release sawhorse v0.1.0-beta.3",
+    "updated_at_epoch_ms": 1794037962747,
+    "verification_receipt": {
+      "base_commit_sha": null,
+      "chain_key": null,
+      "command": "outfeed apply",
+      "commit_shas": [],
+      "diagnostic_count": 0,
+      "exit_code": 0,
+      "git_branch": null,
+      "head_commit_sha": null,
+      "repo": null,
+      "summary": "Release v0.1.0-beta.3 successfully certified and tagged",
+      "verified_at_epoch_ms": 1792995066016,
+      "verifier": "outfeed"
+    }
+  }
+}

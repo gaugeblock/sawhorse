@@ -1,0 +1,134 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1792898145187,
+        "decisions": [],
+        "description": "",
+        "edges": [],
+        "id": "43ec42de-3581-40e3-8990-0536ffaaef5d",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 1,
+        "scope": {
+          "crate_name": "sawhorse-core",
+          "labels": [
+            "sawhorse,auth,env,credentials"
+          ],
+          "module_path": null,
+          "repo": null,
+          "target_files": [],
+          "target_symbols": []
+        },
+        "slug": "fallback-to-gaugeblock-env-in-sawhorse-core-openaicompatprovider-token-resolution-43ec42",
+        "status": "ready",
+        "ticket_key": "SH-2",
+        "title": "Fallback to .gaugeblock/.env in sawhorse-core OpenAiCompatProvider token resolution",
+        "updated_at_epoch_ms": 1792898145187,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "antigravity",
+        "base_commit_sha": "bd4064d228a70be64b645a8e56cba526ce4b7dd2",
+        "claimed_at_epoch_ms": 1792898156384,
+        "git_branch": "fix/gb-41-sawhorse-env-fallback",
+        "lease_expires_at_epoch_ms": 1792901756384
+      },
+      "event": "task_claimed",
+      "task_id": "43ec42de-3581-40e3-8990-0536ffaaef5d"
+    },
+    {
+      "event": "status_changed",
+      "from": "ready",
+      "reason": "Claimed by antigravity",
+      "task_id": "43ec42de-3581-40e3-8990-0536ffaaef5d",
+      "timestamp_ms": 1792898156384,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "bd4064d228a70be64b645a8e56cba526ce4b7dd2",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "bd4064d228a70be64b645a8e56cba526ce4b7dd2"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "fix/gb-41-sawhorse-env-fallback",
+        "head_commit_sha": "bd4064d228a70be64b645a8e56cba526ce4b7dd2",
+        "repo": null,
+        "summary": "Manual verification confirmed",
+        "verified_at_epoch_ms": 1792898262975,
+        "verifier": "manual"
+      },
+      "task_id": "43ec42de-3581-40e3-8990-0536ffaaef5d"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "43ec42de-3581-40e3-8990-0536ffaaef5d",
+      "timestamp_ms": 1793289283981,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "43ec42de-3581-40e3-8990-0536ffaaef5d",
+      "timestamp_ms": 1794037958625
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794037958625,
+    "created_at_epoch_ms": 1792898145187,
+    "decisions": [],
+    "description": "",
+    "edges": [],
+    "id": "43ec42de-3581-40e3-8990-0536ffaaef5d",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 1,
+    "scope": {
+      "crate_name": "sawhorse-core",
+      "labels": [
+        "sawhorse,auth,env,credentials"
+      ],
+      "module_path": null,
+      "repo": null,
+      "target_files": [],
+      "target_symbols": []
+    },
+    "slug": "fallback-to-gaugeblock-env-in-sawhorse-core-openaicompatprovider-token-resolution-43ec42",
+    "status": "verified",
+    "ticket_key": "SH-2",
+    "title": "Fallback to .gaugeblock/.env in sawhorse-core OpenAiCompatProvider token resolution",
+    "updated_at_epoch_ms": 1794037958625,
+    "verification_receipt": {
+      "base_commit_sha": "bd4064d228a70be64b645a8e56cba526ce4b7dd2",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "bd4064d228a70be64b645a8e56cba526ce4b7dd2"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "fix/gb-41-sawhorse-env-fallback",
+      "head_commit_sha": "bd4064d228a70be64b645a8e56cba526ce4b7dd2",
+      "repo": null,
+      "summary": "Manual verification confirmed",
+      "verified_at_epoch_ms": 1792898262975,
+      "verifier": "manual"
+    }
+  }
+}

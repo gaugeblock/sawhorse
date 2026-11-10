@@ -1,0 +1,140 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793149858937,
+        "decisions": [],
+        "description": "Document provider-agnostic 3-mode runtime (OpenAI-compat, Candle GGUF, local), SSE streaming, reasoning trace extraction, provider failover, ADRs, and domain AGENTS.md laws",
+        "edges": [],
+        "id": "62bebe0d-e54a-4124-aa7a-314ba40fba81",
+        "kind": "feature",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 1,
+        "scope": {
+          "crate_name": "sawhorse-core",
+          "labels": [],
+          "module_path": null,
+          "repo": "sawhorse",
+          "target_files": [],
+          "target_symbols": []
+        },
+        "slug": "elevate-sawhorse-documentation-across-all-9-canonical-documents-62bebe",
+        "status": "ready",
+        "ticket_key": "SH-7",
+        "title": "Elevate sawhorse documentation across all 9 canonical documents",
+        "updated_at_epoch_ms": 1793149858937,
+        "verification_receipt": null
+      }
+    },
+    {
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "150580f0-de24-4825-985d-b5565297c041",
+        "target_repo": "workspace",
+        "target_ticket_key": "GB-114"
+      },
+      "event": "edge_added",
+      "task_id": "62bebe0d-e54a-4124-aa7a-314ba40fba81",
+      "timestamp_ms": 1793149861949
+    },
+    {
+      "claim": {
+        "agent_id": "agent-antigravity",
+        "base_commit_sha": "a71e02c00a58fa5229fe406e5667db9e793b2981",
+        "claimed_at_epoch_ms": 1793159868681,
+        "git_branch": "feat/sawhorse-docs-elevation",
+        "lease_expires_at_epoch_ms": 1793163468681
+      },
+      "event": "task_claimed",
+      "task_id": "62bebe0d-e54a-4124-aa7a-314ba40fba81"
+    },
+    {
+      "event": "status_changed",
+      "from": "ready",
+      "reason": "Claimed by agent-antigravity",
+      "task_id": "62bebe0d-e54a-4124-aa7a-314ba40fba81",
+      "timestamp_ms": 1793159868681,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "a71e02c00a58fa5229fe406e5667db9e793b2981",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "a71e02c00a58fa5229fe406e5667db9e793b2981"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "feat/sawhorse-docs-elevation",
+        "head_commit_sha": "a71e02c00a58fa5229fe406e5667db9e793b2981",
+        "repo": null,
+        "summary": "Manual verification confirmed",
+        "verified_at_epoch_ms": 1793160245037,
+        "verifier": "manual"
+      },
+      "task_id": "62bebe0d-e54a-4124-aa7a-314ba40fba81"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "62bebe0d-e54a-4124-aa7a-314ba40fba81",
+      "timestamp_ms": 1794037978510
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794037978510,
+    "created_at_epoch_ms": 1793149858937,
+    "decisions": [],
+    "description": "Document provider-agnostic 3-mode runtime (OpenAI-compat, Candle GGUF, local), SSE streaming, reasoning trace extraction, provider failover, ADRs, and domain AGENTS.md laws",
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "150580f0-de24-4825-985d-b5565297c041",
+        "target_repo": "workspace",
+        "target_ticket_key": "GB-114"
+      }
+    ],
+    "id": "62bebe0d-e54a-4124-aa7a-314ba40fba81",
+    "kind": "feature",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 1,
+    "scope": {
+      "crate_name": "sawhorse-core",
+      "labels": [],
+      "module_path": null,
+      "repo": "sawhorse",
+      "target_files": [],
+      "target_symbols": []
+    },
+    "slug": "elevate-sawhorse-documentation-across-all-9-canonical-documents-62bebe",
+    "status": "verified",
+    "ticket_key": "SH-7",
+    "title": "Elevate sawhorse documentation across all 9 canonical documents",
+    "updated_at_epoch_ms": 1794037978510,
+    "verification_receipt": {
+      "base_commit_sha": "a71e02c00a58fa5229fe406e5667db9e793b2981",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "a71e02c00a58fa5229fe406e5667db9e793b2981"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "feat/sawhorse-docs-elevation",
+      "head_commit_sha": "a71e02c00a58fa5229fe406e5667db9e793b2981",
+      "repo": null,
+      "summary": "Manual verification confirmed",
+      "verified_at_epoch_ms": 1793160245037,
+      "verifier": "manual"
+    }
+  }
+}
