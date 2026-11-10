@@ -9,7 +9,7 @@
         "active_claim": null,
         "created_at_epoch_ms": 1793360258911,
         "decisions": [],
-        "description": "Measured, five calls each, same model and key: a structured joiner-style prompt (system message, file context, fenced code) failed 3 of 5 with HTTP 500 empty response content, while a short plain prompt failed 0 of 5. So the failure is intermittent and prompt-shape related, not a token budget problem - but sawhorse appends a diagnostic that asserts reasoning models exhausted max_tokens, which is a guess presented as a cause. That guess cost two wrong fixes before it was tested: GB-206 raised the budget 1024 to 8192, and GB-212 disabled the reasoning trace; neither addressed the flake, though both are defensible on their own terms. Two changes are needed: a bounded retry in the router for an empty-content 500 (transient), and a diagnostic that states what was observed and ranks likely causes instead of naming one. A single-sample bisect of this cost me a wrong conclusion about code fences, which is worth remembering as a measurement discipline point.",
+        "description": "Measured, five calls each, same model and key: a structured joiner-style prompt (system message, file context, fenced code) failed 3 of 5 with HTTP 500 empty response content, while a short plain prompt failed 0 of 5. So the failure is intermittent and prompt-shape related, not a token budget problem - but sawhorse appends a diagnostic that asserts reasoning models exhausted max_tokens, which is a guess presented as a cause. That guess cost two wrong fixes before it was tested: JN-7 raised the budget 1024 to 8192, and JN-8 disabled the reasoning trace; neither addressed the flake, though both are defensible on their own terms. Two changes are needed: a bounded retry in the router for an empty-content 500 (transient), and a diagnostic that states what was observed and ranks likely causes instead of naming one. A single-sample bisect of this cost me a wrong conclusion about code fences, which is worth remembering as a measurement discipline point.",
         "edges": [
           {
             "kind": "discovered_from",
@@ -44,7 +44,7 @@
       "edge": {
         "kind": "related_to",
         "target_id": "c5c947ba-bb30-491d-9de6-2f08a3d74d2c",
-        "target_ticket_key": "GB-206"
+        "target_ticket_key": "JN-7"
       },
       "event": "edge_added",
       "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
@@ -54,7 +54,7 @@
       "edge": {
         "kind": "related_to",
         "target_id": "fd096035-84f9-45a2-9562-5b4112406305",
-        "target_ticket_key": "GB-212"
+        "target_ticket_key": "JN-8"
       },
       "event": "edge_added",
       "task_id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
@@ -65,7 +65,7 @@
         "A captured body from /tmp/gbdump reproduces the 500 and the same body passes after the fix",
         "The trigger is named as a specific pair of prompt elements, or the streaming path is proven to bypass it"
       ],
-      "description": "Provider returns a 500 \"empty response content\" for some prompts, and sawhorse used to blame max_tokens.\n\nREPRODUCED (deterministic). `SAWHORSE_DUMP_REQUEST=/tmp/gbdump joiner fill /tmp/gb-gold-crate/src/lib.rs --symbol grapheme_count --max-tokens 4096` captures a 753-byte body that fails 5/5 on replay via curl. That capture is now the fixture for all further bisection.\n\nREFUTED, each by measurement on the same model (cline-pass/deepseek-v4.1-flash-1017):\n- max_tokens exhaustion: 4096 and 32768 fail identically; the prompt is ~260 tokens against a 1M window.\n- reasoning trace eating the budget: reasoning_effort=none with max_tokens=4096 still fails.\n- the triple reasoning encoding (reasoning{effort} + reasoning_effort + thinking{type:enabled}): dropping each key individually still fails.\n- temperature float32 artifact (0.20000000298023224): fails identically at 0.2.\n- structured output: json_object and json_schema answer 200.\n- all six reasoning effort values: 200 with a plain prompt.\n- fenced-only response being eaten by an artifact extractor: asking for a pure fence answers 200 twice.\n- prompt length: every individual piece of the failing user message answers 200 (intent / fenced current code / diagnostics / fence request).\n\nCONFIRMED: only the COMBINATION of those pieces fails. Same model, same system message, pieces alone 200, together 500. Splitting into separate user turns still fails.\n\nNEXT: bisect the response side. \"empty response content\" is a content-extraction error, and stream:true takes a different code path through the gateway, so replay the captured body with streaming before touching prompt wording. Then binary-search which two pieces interact.\n\nCost of the previous misdiagnosis: GB-206/GB-212 raised the budget twice and disabled reasoning on the strength of a message that asserted a cause it had not measured. The diagnostic now reports the observation and ranks causes (GB-215).",
+      "description": "Provider returns a 500 \"empty response content\" for some prompts, and sawhorse used to blame max_tokens.\n\nREPRODUCED (deterministic). `SAWHORSE_DUMP_REQUEST=/tmp/gbdump joiner fill /tmp/gb-gold-crate/src/lib.rs --symbol grapheme_count --max-tokens 4096` captures a 753-byte body that fails 5/5 on replay via curl. That capture is now the fixture for all further bisection.\n\nREFUTED, each by measurement on the same model (cline-pass/deepseek-v4.1-flash-1017):\n- max_tokens exhaustion: 4096 and 32768 fail identically; the prompt is ~260 tokens against a 1M window.\n- reasoning trace eating the budget: reasoning_effort=none with max_tokens=4096 still fails.\n- the triple reasoning encoding (reasoning{effort} + reasoning_effort + thinking{type:enabled}): dropping each key individually still fails.\n- temperature float32 artifact (0.20000000298023224): fails identically at 0.2.\n- structured output: json_object and json_schema answer 200.\n- all six reasoning effort values: 200 with a plain prompt.\n- fenced-only response being eaten by an artifact extractor: asking for a pure fence answers 200 twice.\n- prompt length: every individual piece of the failing user message answers 200 (intent / fenced current code / diagnostics / fence request).\n\nCONFIRMED: only the COMBINATION of those pieces fails. Same model, same system message, pieces alone 200, together 500. Splitting into separate user turns still fails.\n\nNEXT: bisect the response side. \"empty response content\" is a content-extraction error, and stream:true takes a different code path through the gateway, so replay the captured body with streaming before touching prompt wording. Then binary-search which two pieces interact.\n\nCost of the previous misdiagnosis: JN-7/JN-8 raised the budget twice and disabled reasoning on the strength of a message that asserted a cause it had not measured. The diagnostic now reports the observation and ranks causes (GB-215).",
       "event": "task_updated",
       "priority": null,
       "scope": null,
@@ -160,12 +160,12 @@
       {
         "kind": "related_to",
         "target_id": "c5c947ba-bb30-491d-9de6-2f08a3d74d2c",
-        "target_ticket_key": "GB-206"
+        "target_ticket_key": "JN-7"
       },
       {
         "kind": "related_to",
         "target_id": "fd096035-84f9-45a2-9562-5b4112406305",
-        "target_ticket_key": "GB-212"
+        "target_ticket_key": "JN-8"
       }
     ],
     "id": "9a301cae-b72e-4ea9-83cb-c1437e07dced",
