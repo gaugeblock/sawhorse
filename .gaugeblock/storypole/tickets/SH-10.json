@@ -1,0 +1,67 @@
+{
+  "ticket": {
+    "id": "bb34c9bc-92f5-4bf6-857c-727038c89dec",
+    "ticket_key": "SH-10",
+    "slug": "prove-telemetry-written-from-a-member-repository-lands-in-the-suite-spool-not-the-member-own-bb34c9",
+    "title": "prove telemetry written from a member repository lands in the suite spool, not the member own",
+    "description": "The miter multi-repo register used to carry sawhorse-core as owing a two-repository test for telemetry written from a member repository. The register entry was removed because the crate no longer calls discovery at all: record_completion resolves the sink through gaugeblock_workspace::sink_path(&cwd), which walks up to the declared suite on the caller behalf. So the gate cannot see it, and the behaviour is untested from this side. What the entry asked for is still worth having, because the failure it guards against is the one GB-338 fixed: a member writing telemetry into its own directory leaves the suite panel tailing an empty log, and the fix is invisible without a test that runs from a member. Wanted: a sawhorse-core test with a declared suite root and two member repositories, record_completion called with cwd set to one member, asserting the span lands in the SUITE outbox and not in the member. multi-repo: declared suite with two members, write issued from one of them. Not urgent - sink_path has its own tests in gaugeblock-workspace - but it is the layer where the defect was observed.",
+    "kind": "tech_debt",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "sawhorse-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "sawhorse_core::telemetry::record_completion"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794513206405,
+    "updated_at_epoch_ms": 1794513206405
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "bb34c9bc-92f5-4bf6-857c-727038c89dec",
+        "ticket_key": "SH-10",
+        "slug": "prove-telemetry-written-from-a-member-repository-lands-in-the-suite-spool-not-the-member-own-bb34c9",
+        "title": "prove telemetry written from a member repository lands in the suite spool, not the member own",
+        "description": "The miter multi-repo register used to carry sawhorse-core as owing a two-repository test for telemetry written from a member repository. The register entry was removed because the crate no longer calls discovery at all: record_completion resolves the sink through gaugeblock_workspace::sink_path(&cwd), which walks up to the declared suite on the caller behalf. So the gate cannot see it, and the behaviour is untested from this side. What the entry asked for is still worth having, because the failure it guards against is the one GB-338 fixed: a member writing telemetry into its own directory leaves the suite panel tailing an empty log, and the fix is invisible without a test that runs from a member. Wanted: a sawhorse-core test with a declared suite root and two member repositories, record_completion called with cwd set to one member, asserting the span lands in the SUITE outbox and not in the member. multi-repo: declared suite with two members, write issued from one of them. Not urgent - sink_path has its own tests in gaugeblock-workspace - but it is the layer where the defect was observed.",
+        "kind": "tech_debt",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "sawhorse-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "sawhorse_core::telemetry::record_completion"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794513206405,
+        "updated_at_epoch_ms": 1794513206405
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}
